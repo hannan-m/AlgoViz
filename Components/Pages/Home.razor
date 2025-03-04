@@ -1,7 +1,33 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<div class="max-w-4xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Algorithm Visualization</h1>
 
-<h1>Hello, world!</h1>
+    <p class="mb-4">
+        Welcome to the Algorithm Visualizer! This application helps you understand various algorithms through visual
+        representations.
+    </p>
 
-Welcome to your new app.
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        <div class="bg-white p-6 rounded shadow-md hover:shadow-lg transition">
+            <h2 class="text-xl font-bold mb-2">Sorting Algorithms</h2>
+            <p class="text-gray-600 mb-4">Visualize how different sorting algorithms work on arrays of data.</p>
+            <a href="/sorting"
+                class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Explore</a>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow-md hover:shadow-lg transition">
+            <h2 class="text-xl font-bold mb-2">Pathfinding Algorithms</h2>
+            <p class="text-gray-600 mb-4">See how algorithms find the shortest path in a grid.</p>
+            <a href="/pathfinding"
+                class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Explore</a>
+        </div>
+
+        <div class="bg-white p-6 rounded shadow-md hover:shadow-lg transition">
+            <h2 class="text-xl font-bold mb-2">Searching Algorithms</h2>
+            <p class="text-gray-600 mb-4">Visualize different searching techniques on data structures.</p>
+            <a href="/searching"
+                class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Explore</a>
+        </div>
+    </div>
+</div>

@@ -1,23 +1,25 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="min-h-screen bg-gray-100">
+    <nav class="bg-indigo-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-xl font-bold">Algorithm Visualizer</a>
+            <div class="space-x-4">
+                <NavLink href="/" Match="NavLinkMatch.All" class="hover:text-indigo-200">Home</NavLink>
+                <NavLink href="/sorting" class="hover:text-indigo-200">Sorting</NavLink>
+                <NavLink href="/pathfinding" class="hover:text-indigo-200">Pathfinding</NavLink>
+                <NavLink href="/searching" class="hover:text-indigo-200">Searching</NavLink>
+            </div>
         </div>
+    </nav>
 
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="container mx-auto py-4">
+        @Body
     </main>
-</div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <footer class="bg-gray-800 text-white p-4 mt-8">
+        <div class="container mx-auto text-center">
+            <p>Algorithm Visualizer - Built with Blazor and Tailwind CSS</p>
+        </div>
+    </footer>
 </div>
