@@ -1,0 +1,863 @@
+@using AlgorithmVisualizer.Models.GridModels
+@using AlgorithmVisualizer.Models
+@using AlgorithmVisualizer.Services.Algorithms.Interfaces
+@using AlgorithmVisualizer.Utilities
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JSRuntime
+
+<div class="grid-container">
+    <div class="grid-controls">
+        <div class="control-section">
+            <h3>Algorithm</h3>
+            <select @bind="selectedAlgorithm" class="form-control">
+                @foreach (var algorithm in Algorithms)
+                {
+                    <option value="@algorithm.Name">@algorithm.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="control-section">
+            <h3>Grid Size</h3>
+            <div class="form-group">
+                <label>Rows: @Rows</label>
+                <input type="range" min="5" max="50" step="1" @bind="Rows" class="form-control"/>
+            </div>
+            <div class="form-group">
+                <label>Columns: @Columns</label>
+                <input type="range" min="5" max="50" step="1" @bind="Columns" class="form-control"/>
+            </div>
+            <button @onclick="ResetGrid" class="btn btn-secondary">Reset Grid</button>
+        </div>
+
+        <div class="control-section">
+            <h3>Cell Type</h3>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="selectStart" name="cellType"
+                       value="@CellSelectionType.Start" checked="@(selectionType == CellSelectionType.Start)"
+                       @onchange="() => selectionType = CellSelectionType.Start">
+                <label class="form-check-label" for="selectStart">Start</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="selectEnd" name="cellType"
+                       value="@CellSelectionType.End" checked="@(selectionType == CellSelectionType.End)"
+                       @onchange="() => selectionType = CellSelectionType.End">
+                <label class="form-check-label" for="selectEnd">End</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="selectWall" name="cellType"
+                       value="@CellSelectionType.Wall" checked="@(selectionType == CellSelectionType.Wall)"
+                       @onchange="() => selectionType = CellSelectionType.Wall">
+                <label class="form-check-label" for="selectWall">Wall</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="selectWeight" name="cellType"
+                       value="@CellSelectionType.Weight" checked="@(selectionType == CellSelectionType.Weight)"
+                       @onchange="() => selectionType = CellSelectionType.Weight">
+                <label class="form-check-label" for="selectWeight">Weight</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" id="selectErase" name="cellType"
+                       value="@CellSelectionType.Erase" checked="@(selectionType == CellSelectionType.Erase)"
+                       @onchange="() => selectionType = CellSelectionType.Erase">
+                <label class="form-check-label" for="selectErase">Erase</label>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>Actions</h3>
+            <button @onclick="VisualizeAsync" class="btn btn-primary" disabled="@(isVisualizing || !HasStartAndEnd)">
+                Visualize
+            </button>
+            <button @onclick="StopVisualization" class="btn btn-danger" disabled="@(!isVisualizing)">Stop</button>
+            <button @onclick="ClearVisualization" class="btn btn-secondary" disabled="@(isVisualizing)">Clear
+                Visualization
+            </button>
+            <button @onclick="GenerateMaze" class="btn btn-info" disabled="@(isVisualizing)">Generate Maze</button>
+        </div>
+
+        @if (CurrentAlgorithm != null)
+        {
+            <div class="control-section">
+                <h3>Algorithm Details</h3>
+                <div>
+                    <strong>Description:</strong> @CurrentAlgorithm.Description
+                </div>
+                <div>
+                    <strong>Time Complexity:</strong> @CurrentAlgorithm.TimeComplexity
+                </div>
+                <div>
+                    <strong>Space Complexity:</strong> @CurrentAlgorithm.SpaceComplexity
+                </div>
+            </div>
+        }
+
+        @if (Statistics != null)
+        {
+            <div class="control-section">
+                <h3>Statistics</h3>
+                <div>
+                    <strong>Execution Time:</strong> @Statistics.ExecutionTimeMs.ToString("F2") ms
+                </div>
+                <div>
+                    <strong>Steps:</strong> @Statistics.StepCount
+                </div>
+                <div>
+                    <strong>Cells Visited:</strong> @Statistics.ElementsProcessed
+                </div>
+                @if (!string.IsNullOrEmpty(Statistics.AdditionalMetrics))
+                {
+                    <div>
+                        <strong>Additional Info:</strong> @Statistics.AdditionalMetrics
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="grid-visualization">
+        <div class="grid" style="grid-template-rows: repeat(@Rows, 1fr); grid-template-columns: repeat(@Columns, 1fr);">
+            @if (GridState != null)
+            {
+                @for (int i = 0; i < Rows; i++)
+                {
+                    @for (int j = 0; j < Columns; j++)
+                    {
+                        var row = i;
+                        var col = j;
+                        var cell = GridState.Grid[row, col];
+
+                        <div class="@GetCellClass(cell)"
+                             style="@GetCellStyle(cell)"
+                             @onmousedown="(e) => OnCellMouseDown(cell, e)"
+                             @onmouseup="OnCellMouseUp"
+                             @onmouseover="(e) => OnCellMouseOver(cell, e)">
+                            @if (cell.Weight > 1 && !cell.IsWall && !cell.IsStart && !cell.IsEnd)
+                            {
+                                <span class="weight-label">@cell.Weight</span>
+                            }
+                        </div>
+                    }
+                }
+            }
+        </div>
+
+        @if (CurrentStep != null)
+        {
+            <div class="step-description">
+                <p>Step @(CurrentStep.StepNumber + 1): @CurrentStep.Description</p>
+            </div>
+        }
+
+        @if (AlgorithmSteps != null && AlgorithmSteps.Any())
+        {
+            <div class="step-controls">
+                <button @onclick="() => GoToStep(0)" class="btn btn-sm btn-secondary"
+                        disabled="@(currentStepIndex <= 0)">First
+                </button>
+                <button @onclick="PreviousStep" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex <= 0)">
+                    Previous
+                </button>
+                <span>Step @(currentStepIndex + 1) of @AlgorithmSteps.Count</span>
+                <button @onclick="NextStep" class="btn btn-sm btn-secondary"
+                        disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Next
+                </button>
+                <button @onclick="() => GoToStep(AlgorithmSteps.Count - 1)" class="btn btn-sm btn-secondary"
+                        disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Last
+                </button>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="autoPlay" @bind="autoPlay">
+                    <label class="form-check-label" for="autoPlay">Auto Play</label>
+                </div>
+                <div class="form-group">
+                    <label>Speed: @visualizationSpeed</label>
+                    <input type="range" min="1" max="100" step="1" @bind="visualizationSpeed" class="form-control"/>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<IPathFindingAlgorithm> Algorithms { get; set; } = new List<IPathFindingAlgorithm>();
+
+    [Parameter] public int Rows { get; set; } = 20;
+
+    [Parameter] public int Columns { get; set; } = 40;
+
+
+    private GridState GridState { get; set; }
+    private string selectedAlgorithm;
+    private IPathFindingAlgorithm CurrentAlgorithm => Algorithms.FirstOrDefault(a => a.Name == selectedAlgorithm);
+
+    private CellSelectionType selectionType = CellSelectionType.Wall;
+    private bool isMouseDown = false;
+    private bool isLeftMouseButton = false;
+    private bool isVisualizing = false;
+    private AlgorithmStatistics Statistics { get; set; }
+
+    private List<AlgorithmStep<GridState>> AlgorithmSteps { get; set; }
+    private int currentStepIndex = -1;
+
+    private AlgorithmStep<GridState> CurrentStep =>
+        currentStepIndex >= 0 && currentStepIndex < AlgorithmSteps?.Count
+            ? AlgorithmSteps[currentStepIndex]
+            : null;
+
+    private bool autoPlay = false;
+    private int visualizationSpeed = 50;
+    private System.Threading.CancellationTokenSource cancellationTokenSource;
+
+    private ThrottledUpdater throttledUpdater = new ThrottledUpdater(50);
+    private ChangeDetector<GridState> changeDetector;
+
+    private bool HasStartAndEnd => GridState?.StartCell != null && GridState?.EndCell != null;
+
+    protected override void OnInitialized()
+    {
+        // Initialize change detector first
+        changeDetector = new ChangeDetector<GridState>((a, b) =>
+        {
+            if (a == null || b == null)
+                return false;
+
+            // Simple comparison: check if start and end cells are in the same position
+            bool sameStart = (a.StartCell == null && b.StartCell == null) ||
+                             (a.StartCell != null && b.StartCell != null &&
+                              a.StartCell.Row == b.StartCell.Row && a.StartCell.Column == b.StartCell.Column);
+
+            bool sameEnd = (a.EndCell == null && b.EndCell == null) ||
+                           (a.EndCell != null && b.EndCell != null &&
+                            a.EndCell.Row == b.EndCell.Row && a.EndCell.Column == b.EndCell.Column);
+
+            return sameStart && sameEnd;
+        });
+
+        // Create grid
+        ResetGrid();
+
+        // Select first algorithm by default
+        if (Algorithms != null && Algorithms.Any())
+        {
+            selectedAlgorithm = Algorithms.First().Name;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeGridMouseEvents");
+        }
+
+        if (autoPlay && AlgorithmSteps != null && currentStepIndex < AlgorithmSteps.Count - 1)
+        {
+            await Task.Delay(101 - visualizationSpeed);
+            await NextStep();
+            StateHasChanged();
+        }
+    }
+
+    private void ResetGrid()
+    {
+        // Create new grid
+        GridState = GridUtilities.CreateEmptyGrid(Rows, Columns);
+
+        // Reset visualization state
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+        isVisualizing = false;
+
+        // Cancel any ongoing visualization
+        cancellationTokenSource?.Cancel();
+
+        // Place start and end cells at default positions
+        int startRow = Rows / 2;
+        int startCol = Columns / 4;
+        int endRow = Rows / 2;
+        int endCol = (Columns * 3) / 4;
+
+        var startCell = GridState.Grid[startRow, startCol];
+        startCell.IsStart = true;
+        startCell.Distance = 0;
+        GridState.StartCell = startCell;
+
+        var endCell = GridState.Grid[endRow, endCol];
+        endCell.IsEnd = true;
+        GridState.EndCell = endCell;
+
+        // Reset change detector if initialized
+        if (changeDetector != null)
+        {
+            changeDetector.Reset();
+        }
+    }
+
+    private async Task VisualizeAsync()
+    {
+        if (CurrentAlgorithm == null || GridState.StartCell == null || GridState.EndCell == null)
+        {
+            return;
+        }
+
+        // Clear previous visualization
+        ClearVisualization();
+
+        // Set visualization state
+        isVisualizing = true;
+
+        // Create a cancellation token source
+        cancellationTokenSource = new CancellationTokenSource();
+        var token = cancellationTokenSource.Token;
+
+        try
+        {
+            // Track performance
+            using var tracker = new PerformanceTracker();
+            tracker.Start();
+
+            // Get algorithm steps
+            AlgorithmSteps = (await CurrentAlgorithm.GetStepsAsync(GridState, GridState.StartCell, GridState.EndCell)).ToList();
+
+            // Record statistics
+            tracker.RecordStep();
+            foreach (var step in AlgorithmSteps)
+            {
+                tracker.RecordElementsProcessed();
+            }
+
+            // Set path length as additional metric
+            var finalState = AlgorithmSteps.Last().State;
+            if (finalState.EndCell?.Parent != null)
+            {
+                var path = GridUtilities.ReconstructPath(finalState.EndCell);
+                tracker.SetAdditionalMetrics($"Path length: {path.Count - 1}");
+            }
+            else
+            {
+                tracker.SetAdditionalMetrics("No path found");
+            }
+
+            // Stop performance tracking
+            Statistics = tracker.Stop();
+
+            // Start visualization from step 0
+            if (AlgorithmSteps.Any())
+            {
+                currentStepIndex = 0;
+                GridState = AlgorithmSteps[currentStepIndex].State;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error during visualization: {ex.Message}");
+        }
+        finally
+        {
+            isVisualizing = false;
+        }
+    }
+
+    private void StopVisualization()
+    {
+        // Cancel ongoing visualization
+        cancellationTokenSource?.Cancel();
+        isVisualizing = false;
+        autoPlay = false;
+    }
+
+    private void ClearVisualization()
+    {
+        // Reset visited and path markings while keeping walls and weights
+        GridUtilities.ResetVisitedAndPath(GridState);
+
+        // Reset step controls
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+
+        // Cancel any ongoing visualization
+        cancellationTokenSource?.Cancel();
+    }
+
+    private void GenerateMaze()
+    {
+        // Clear previous visualization
+        ClearVisualization();
+
+        // Create grid
+        var random = new Random();
+
+        // Clear existing walls
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Columns; j++)
+            {
+                var cell = GridState.Grid[i, j];
+
+                // Don't remove start and end cells
+                if (!cell.IsStart && !cell.IsEnd)
+                {
+                    cell.IsWall = false;
+                    cell.Weight = 1;
+                }
+            }
+        }
+
+        // Add random walls (30% chance)
+        for (int i = 0; i < Rows; i++)
+        {
+            for (int j = 0; j < Columns; j++)
+            {
+                var cell = GridState.Grid[i, j];
+
+                // Don't place walls on start and end cells
+                if (!cell.IsStart && !cell.IsEnd)
+                {
+                    cell.IsWall = random.NextDouble() < 0.3;
+
+                    // Add some weighted cells (10% chance)
+                    if (!cell.IsWall && random.NextDouble() < 0.1)
+                    {
+                        cell.Weight = random.Next(2, 10);
+                    }
+                }
+            }
+        }
+
+        // Ensure there are no walls around start and end for better visuals
+        if (GridState.StartCell != null)
+        {
+            var startRow = GridState.StartCell.Row;
+            var startCol = GridState.StartCell.Column;
+
+            for (int i = Math.Max(0, startRow - 1); i <= Math.Min(Rows - 1, startRow + 1); i++)
+            {
+                for (int j = Math.Max(0, startCol - 1); j <= Math.Min(Columns - 1, startCol + 1); j++)
+                {
+                    if (!GridState.Grid[i, j].IsStart && !GridState.Grid[i, j].IsEnd)
+                    {
+                        GridState.Grid[i, j].IsWall = false;
+                    }
+                }
+            }
+        }
+
+        if (GridState.EndCell != null)
+        {
+            var endRow = GridState.EndCell.Row;
+            var endCol = GridState.EndCell.Column;
+
+            for (int i = Math.Max(0, endRow - 1); i <= Math.Min(Rows - 1, endRow + 1); i++)
+            {
+                for (int j = Math.Max(0, endCol - 1); j <= Math.Min(Columns - 1, endCol + 1); j++)
+                {
+                    if (!GridState.Grid[i, j].IsStart && !GridState.Grid[i, j].IsEnd)
+                    {
+                        GridState.Grid[i, j].IsWall = false;
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task NextStep()
+    {
+        if (AlgorithmSteps == null || currentStepIndex >= AlgorithmSteps.Count - 1)
+        {
+            return;
+        }
+
+        currentStepIndex++;
+
+        await throttledUpdater.ThrottleAsync();
+        GridState = AlgorithmSteps[currentStepIndex].State;
+    }
+
+    private async Task PreviousStep()
+    {
+        if (AlgorithmSteps == null || currentStepIndex <= 0)
+        {
+            return;
+        }
+
+        currentStepIndex--;
+
+        await throttledUpdater.ThrottleAsync();
+        GridState = AlgorithmSteps[currentStepIndex].State;
+    }
+
+    private async Task GoToStep(int stepIndex)
+    {
+        if (AlgorithmSteps == null || stepIndex < 0 || stepIndex >= AlgorithmSteps.Count)
+        {
+            return;
+        }
+
+        currentStepIndex = stepIndex;
+
+        await throttledUpdater.ThrottleAsync();
+        GridState = AlgorithmSteps[currentStepIndex].State;
+    }
+
+
+    private async Task OnCellClicked(GridCell cell)
+    {
+        if (isVisualizing)
+        {
+            return;
+        }
+
+        isMouseDown = true;
+        await ModifyCell(cell);
+    }
+
+    private void OnCellMouseDown(GridCell cell, MouseEventArgs e)
+    {
+        // Only respond to mouse events when not visualizing
+        if (isVisualizing)
+            return;
+
+        isMouseDown = true;
+        isLeftMouseButton = e.Button == 0; // 0 is left mouse button
+
+        ModifyCell(cell);
+    }
+
+    private void OnCellMouseUp()
+    {
+        isMouseDown = false;
+    }
+
+    private void OnCellMouseOver(GridCell cell, MouseEventArgs e)
+    {
+        // Only modify cells when mouse is down and not visualizing
+        if (isMouseDown && isLeftMouseButton && !isVisualizing)
+        {
+            ModifyCell(cell);
+        }
+    }
+
+    private async Task ModifyCell(GridCell cell)
+    {
+        // Skip if visualizing
+        if (isVisualizing)
+        {
+            return;
+        }
+
+        // Get the actual cell from the grid
+        var gridCell = GridState.Grid[cell.Row, cell.Column];
+        bool stateChanged = false;
+
+        switch (selectionType)
+        {
+            case CellSelectionType.Start:
+                // Remove old start cell
+                if (GridState.StartCell != null)
+                {
+                    GridState.StartCell.IsStart = false;
+                }
+
+                // Set new start cell
+                gridCell.IsStart = true;
+                gridCell.IsWall = false;
+                gridCell.IsEnd = false;
+                gridCell.Distance = 0;
+                GridState.StartCell = gridCell;
+
+                // If this was the end cell, remove it
+                if (GridState.EndCell == gridCell)
+                {
+                    GridState.EndCell = null;
+                }
+
+                stateChanged = true;
+                break;
+
+            case CellSelectionType.End:
+                // Remove old end cell
+                if (GridState.EndCell != null)
+                {
+                    GridState.EndCell.IsEnd = false;
+                }
+
+                // Set new end cell
+                gridCell.IsEnd = true;
+                gridCell.IsWall = false;
+                gridCell.IsStart = false;
+                GridState.EndCell = gridCell;
+
+                // If this was the start cell, remove it
+                if (GridState.StartCell == gridCell)
+                {
+                    GridState.StartCell = null;
+                }
+
+                stateChanged = true;
+                break;
+
+            case CellSelectionType.Wall:
+                // Skip if start or end
+                if (!gridCell.IsStart && !gridCell.IsEnd)
+                {
+                    gridCell.IsWall = true;
+                    gridCell.Weight = 1;
+                    stateChanged = true;
+                }
+
+                break;
+
+            case CellSelectionType.Weight:
+                // Skip if start, end, or wall
+                if (!gridCell.IsStart && !gridCell.IsEnd && !gridCell.IsWall)
+                {
+                    gridCell.Weight = 5;
+                    stateChanged = true;
+                }
+
+                break;
+
+            case CellSelectionType.Erase:
+                // Skip start and end cells
+                if (!gridCell.IsStart && !gridCell.IsEnd)
+                {
+                    gridCell.IsWall = false;
+                    gridCell.Weight = 1;
+                    stateChanged = true;
+                }
+
+                break;
+        }
+
+        // Clear visualization if grid changed
+        if (stateChanged)
+        {
+            ClearVisualization();
+
+            // Only update UI if state significantly changed
+            if (changeDetector.HasChanged(GridState))
+            {
+                await throttledUpdater.AdaptiveUpdateAsync(
+                    async () => await InvokeAsync(StateHasChanged),
+                    Rows * Columns
+                );
+            }
+        }
+    }
+
+    private string GetCellClass(GridCell cell)
+    {
+        var classes = "grid-cell";
+
+        if (cell.IsStart)
+        {
+            classes += " start-cell";
+        }
+        else if (cell.IsEnd)
+        {
+            classes += " end-cell";
+        }
+        else if (cell.IsWall)
+        {
+            classes += " wall-cell";
+        }
+        else if (cell.IsPath)
+        {
+            classes += " path-cell";
+        }
+        else if (cell.IsVisited)
+        {
+            classes += " visited-cell";
+        }
+        else if (cell.Weight > 1)
+        {
+            classes += " weight-cell";
+        }
+
+        // Highlight cells in the open set
+        if (AlgorithmSteps != null && currentStepIndex >= 0 && currentStepIndex < AlgorithmSteps.Count)
+        {
+            var currentState = AlgorithmSteps[currentStepIndex].State;
+            if (currentState.OpenSet?.Any(c => c.Row == cell.Row && c.Column == cell.Column) == true)
+            {
+                classes += " open-set-cell";
+            }
+        }
+
+        return classes;
+    }
+
+    private string GetCellStyle(GridCell cell)
+    {
+        if (cell.IsVisited && !cell.IsPath && !cell.IsStart && !cell.IsEnd && !cell.IsWall)
+        {
+            // Color visited cells by distance (gradient from blue to purple)
+            int maxDistance = GridState.Grid.Cast<GridCell>().Max(c => c.IsVisited ? c.Distance : 0);
+            double ratio = maxDistance > 0 ? (double)cell.Distance / maxDistance : 0;
+            int red = (int)(150 * ratio);
+            int blue = 200;
+
+            return $"background-color: rgb({red}, 0, {blue});";
+        }
+
+        return string.Empty;
+    }
+
+    private enum CellSelectionType
+    {
+        Start,
+        End,
+        Wall,
+        Weight,
+        Erase
+    }
+
+}
+
+<style>
+    .grid-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        height: calc(100vh - 150px);
+        overflow: hidden;
+    }
+
+    .grid-controls {
+        flex: 0 0 300px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
+
+    .grid-visualization {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .control-section {
+        margin-bottom: 20px;
+    }
+
+    .grid {
+        flex: 1;
+        display: grid;
+        gap: 1px;
+        background-color: #e0e0e0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        overflow: auto;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+        user-select: none;
+    }
+
+    .grid-cell {
+        background-color: white;
+        position: relative;
+        user-select: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-width: 20px;
+        min-height: 20px;
+        transition: background-color 0.2s ease;
+        cursor: pointer;
+    }
+
+    /* Update other grid cell styles for better visuals */
+    .start-cell {
+        background-color: #4CAF50 !important;
+        box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
+    }
+
+    .end-cell {
+        background-color: #F44336 !important;
+        box-shadow: 0 0 5px rgba(244, 67, 54, 0.7);
+    }
+
+    .wall-cell {
+        background-color: #333 !important;
+    }
+
+    .visited-cell {
+        background-color: #64B5F6;
+        animation: visitedAnimation 0.3s ease-out;
+    }
+
+    .path-cell {
+        background-color: #FFD700 !important;
+        animation: pathAnimation 0.5s ease;
+    }
+
+    .weight-cell {
+        background-color: #9E9E9E;
+    }
+
+    .open-set-cell {
+        border: 2px solid #FF9800;
+    }
+
+    .weight-label {
+        font-size: 10px;
+        color: white;
+    }
+
+    .step-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
+
+    .step-description {
+        padding: 10px;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    @@media (max-width: 768px) {
+        .grid-container {
+            flex-direction: column;
+        }
+
+        .grid-controls {
+            flex: 0 0 auto;
+            max-height: 300px;
+        }
+    }
+
+    @@keyframes visitedAnimation {
+        0% {
+            transform: scale(0.3);
+            opacity: 0.2;
+        }
+        50% {
+            transform: scale(1.2);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1.0);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes pathAnimation {
+        0% {
+            transform: scale(0.6);
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1.0);
+        }
+    }
+</style>

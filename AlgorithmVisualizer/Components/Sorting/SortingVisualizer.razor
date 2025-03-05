@@ -1,0 +1,479 @@
+@using AlgorithmVisualizer.Models.SortingModels
+@using AlgorithmVisualizer.Models
+@using AlgorithmVisualizer.Services.Algorithms.Interfaces
+@using AlgorithmVisualizer.Utilities
+@inject IJSRuntime JSRuntime
+
+<div class="sorting-container">
+    <div class="sorting-controls">
+        <div class="control-section">
+            <h3>Algorithm</h3>
+            <select @bind="selectedAlgorithm" class="form-control">
+                @foreach (var algorithm in Algorithms)
+                {
+                    <option value="@algorithm.Name">@algorithm.Name</option>
+                }
+            </select>
+        </div>
+        
+        <div class="control-section">
+            <h3>Array Size</h3>
+            <div class="form-group">
+                <label>Number of elements: @ArraySize</label>
+                <input type="range" min="5" max="100" step="1" @bind="ArraySize" class="form-control" />
+            </div>
+            <button @onclick="GenerateRandomArray" class="btn btn-secondary">Randomize Array</button>
+        </div>
+        
+        <div class="control-section">
+            <h3>Actions</h3>
+            <button @onclick="VisualizeAsync" class="btn btn-primary" disabled="@isVisualizing">Visualize</button>
+            <button @onclick="StopVisualization" class="btn btn-danger" disabled="@(!isVisualizing)">Stop</button>
+            <button @onclick="ResetArray" class="btn btn-secondary" disabled="@isVisualizing">Reset</button>
+        </div>
+        
+        @if (CurrentAlgorithm != null)
+        {
+            <div class="control-section">
+                <h3>Algorithm Details</h3>
+                <div>
+                    <strong>Description:</strong> @CurrentAlgorithm.Description
+                </div>
+                <div>
+                    <strong>Time Complexity:</strong> @CurrentAlgorithm.TimeComplexity
+                </div>
+                <div>
+                    <strong>Space Complexity:</strong> @CurrentAlgorithm.SpaceComplexity
+                </div>
+            </div>
+        }
+        
+        @if (Statistics != null)
+        {
+            <div class="control-section">
+                <h3>Statistics</h3>
+                <div>
+                    <strong>Execution Time:</strong> @Statistics.ExecutionTimeMs.ToString("F2") ms
+                </div>
+                <div>
+                    <strong>Steps:</strong> @Statistics.StepCount
+                </div>
+                <div>
+                    <strong>Elements Processed:</strong> @Statistics.ElementsProcessed
+                </div>
+                @if (!string.IsNullOrEmpty(Statistics.AdditionalMetrics))
+                {
+                    <div>
+                        <strong>Additional Info:</strong> @Statistics.AdditionalMetrics
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    
+    <div class="sorting-visualization">
+        <div class="array-container" style="height: 400px; min-height: 300px;">
+            @if (CurrentSortingState != null && CurrentSortingState.Array != null)
+            {
+                @for (int i = 0; i < CurrentSortingState.Array.Length; i++)
+                {
+                    int value = CurrentSortingState.Array[i];
+                    double heightPercentage = ((double)value / MaxValue) * 100;
+                    string barClass = GetBarClass(i);
+                    
+                    <div class="array-bar @GetBarClass(i)" 
+                         style="height: @(heightPercentage)%; width: calc((100% / @CurrentSortingState.Array.Length) - 4px); margin: 0 2px;">
+                        @if (CurrentSortingState.Array.Length <= 50)
+                        {
+                            <span class="bar-value">@value</span>
+                        }
+                    </div>
+                }
+            }
+        </div>
+        
+        @if (CurrentStep != null)
+        {
+            <div class="step-description">
+                <p>Step @(CurrentStep.StepNumber + 1): @CurrentStep.Description</p>
+            </div>
+        }
+        
+        @if (AlgorithmSteps != null && AlgorithmSteps.Any())
+        {
+            <div class="step-controls">
+                <button @onclick="() => GoToStep(0)" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex <= 0)">First</button>
+                <button @onclick="PreviousStep" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex <= 0)">Previous</button>
+                <span>Step @(currentStepIndex + 1) of @AlgorithmSteps.Count</span>
+                <button @onclick="NextStep" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Next</button>
+                <button @onclick="() => GoToStep(AlgorithmSteps.Count - 1)" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Last</button>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="autoPlay" @bind="autoPlay">
+                    <label class="form-check-label" for="autoPlay">Auto Play</label>
+                </div>
+                <div class="form-group">
+                    <label>Speed: @visualizationSpeed</label>
+                    <input type="range" min="1" max="100" step="1" @bind="visualizationSpeed" class="form-control" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<ISortingAlgorithm> Algorithms { get; set; } = new List<ISortingAlgorithm>();
+    
+    private int _arraySize = 30;
+    [Parameter]
+    public int ArraySize 
+    { 
+        get => _arraySize;
+        set
+        {
+            if (_arraySize != value)
+            {
+                _arraySize = value;
+                GenerateRandomArray();
+                StateHasChanged(); // Force UI update
+            }
+        }
+    }
+    
+    private int[] Array { get; set; }
+    private int MaxValue => Array?.Length > 0 ? Math.Max(100, Array.Max()) : 100;
+    private string selectedAlgorithm;
+    private ISortingAlgorithm CurrentAlgorithm => Algorithms.FirstOrDefault(a => a.Name == selectedAlgorithm);
+    
+    private bool isVisualizing = false;
+    private AlgorithmStatistics Statistics { get; set; }
+    
+    private List<AlgorithmStep<SortingState>> AlgorithmSteps { get; set; }
+    private int currentStepIndex = -1;
+    private AlgorithmStep<SortingState> CurrentStep => 
+        currentStepIndex >= 0 && currentStepIndex < AlgorithmSteps?.Count 
+            ? AlgorithmSteps[currentStepIndex] 
+            : null;
+    
+    private SortingState CurrentSortingState => CurrentStep?.State ?? new SortingState { Array = Array };
+    
+    private bool autoPlay = false;
+    private int visualizationSpeed = 50;
+    private System.Threading.CancellationTokenSource cancellationTokenSource;
+    
+    private ThrottledUpdater throttledUpdater = new ThrottledUpdater(50);
+    private ChangeDetector<int[]> changeDetector;
+    
+    protected override void OnInitialized()
+    {
+        // Initialize change detector first
+        changeDetector = new ChangeDetector<int[]>((a, b) => {
+            if (a == null || b == null || a.Length != b.Length)
+                return false;
+            
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (a[i] != b[i])
+                    return false;
+            }
+        
+            return true;
+        });
+    
+        // Initialize array
+        GenerateRandomArray();
+    
+        // Select first algorithm by default
+        if (Algorithms != null && Algorithms.Any())
+        {
+            selectedAlgorithm = Algorithms.First().Name;
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (autoPlay && AlgorithmSteps != null && currentStepIndex < AlgorithmSteps.Count - 1)
+        {
+            await Task.Delay(101 - visualizationSpeed);
+            await NextStep();
+            StateHasChanged();
+        }
+    }
+    
+    private void GenerateRandomArray()
+    {
+        // Create a new array with randomized values
+        Array = new int[ArraySize];
+        var random = new Random();
+    
+        for (int i = 0; i < ArraySize; i++)
+        {
+            Array[i] = random.Next(5, 100);
+        }
+    
+        // Reset visualization state
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+        isVisualizing = false;
+    
+        // Cancel any ongoing visualization
+        cancellationTokenSource?.Cancel();
+    
+        // Reset change detector if initialized
+        if (changeDetector != null)
+        {
+            changeDetector.Reset();
+        }
+    
+        // Update state to trigger rendering
+        StateHasChanged();
+    }
+    
+    private void ResetArray()
+    {
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+        isVisualizing = false;
+        
+        // Cancel any ongoing visualization
+        cancellationTokenSource?.Cancel();
+    }
+    
+    private async Task VisualizeAsync()
+    {
+        if (CurrentAlgorithm == null || Array == null || Array.Length == 0)
+        {
+            return;
+        }
+        
+        // Reset visualization state
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+        
+        // Set visualization state
+        isVisualizing = true;
+        
+        // Create a cancellation token source
+        cancellationTokenSource = new CancellationTokenSource();
+        var token = cancellationTokenSource.Token;
+        
+        try
+        {
+            // Track performance
+            using var tracker = new PerformanceTracker();
+            tracker.Start();
+            
+            // Get algorithm steps
+            AlgorithmSteps = (await CurrentAlgorithm.GetStepsAsync(Array)).ToList();
+            
+            // Record statistics
+            tracker.RecordStep();
+            foreach (var step in AlgorithmSteps)
+            {
+                tracker.RecordElementsProcessed();
+            }
+            
+            // Set additional metrics
+            tracker.SetAdditionalMetrics($"Comparisons: {AlgorithmSteps.Count(s => s.Description.Contains("Comparing"))}");
+            
+            // Stop performance tracking
+            Statistics = tracker.Stop();
+            
+            // Start visualization from step 0
+            if (AlgorithmSteps.Any())
+            {
+                currentStepIndex = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error during visualization: {ex.Message}");
+        }
+        finally
+        {
+            isVisualizing = false;
+        }
+    }
+    
+    private void StopVisualization()
+    {
+        // Cancel ongoing visualization
+        cancellationTokenSource?.Cancel();
+        isVisualizing = false;
+        autoPlay = false;
+    }
+    
+    private async Task NextStep()
+    {
+        if (AlgorithmSteps == null || currentStepIndex >= AlgorithmSteps.Count - 1)
+        {
+            return;
+        }
+        
+        currentStepIndex++;
+        
+        await throttledUpdater.ThrottleAsync();
+    }
+    
+    private async Task PreviousStep()
+    {
+        if (AlgorithmSteps == null || currentStepIndex <= 0)
+        {
+            return;
+        }
+        
+        currentStepIndex--;
+        
+        await throttledUpdater.ThrottleAsync();
+    }
+    
+    private async Task GoToStep(int stepIndex)
+    {
+        if (AlgorithmSteps == null || stepIndex < 0 || stepIndex >= AlgorithmSteps.Count)
+        {
+            return;
+        }
+        
+        currentStepIndex = stepIndex;
+        
+        await throttledUpdater.ThrottleAsync();
+    }
+    
+    private string GetBarClass(int index)
+    {
+        if (CurrentSortingState == null)
+            return string.Empty;
+        
+        var classNames = "";
+        
+        // Highlight compared elements
+        if (CurrentSortingState.CompareIndex1 == index)
+            classNames += " compare-1";
+        if (CurrentSortingState.CompareIndex2 == index)
+            classNames += " compare-2";
+        
+        // Highlight pivot
+        if (CurrentSortingState.PivotIndex == index)
+            classNames += " pivot-element";
+        
+        // Highlight sorted elements
+        if (CurrentSortingState.IsSorted != null && CurrentSortingState.IsSorted.Length > index && CurrentSortingState.IsSorted[index])
+            classNames += " sorted-element";
+        
+        // Highlight current sub-array
+        if (CurrentSortingState.SubArrayStart != null && CurrentSortingState.SubArrayEnd != null && 
+            index >= CurrentSortingState.SubArrayStart && index <= CurrentSortingState.SubArrayEnd)
+            classNames += " current-subarray";
+        
+        return classNames;
+    }
+}
+
+<style>
+    .sorting-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        height: calc(100vh - 150px);
+        overflow: hidden;
+    }
+    
+    .sorting-controls {
+        flex: 0 0 300px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
+    
+    .sorting-visualization {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .control-section {
+        margin-bottom: 20px;
+    }
+
+    .array-container {
+        display: flex;
+        align-items: flex-end;
+        margin: 20px 0;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .array-bar {
+        background-color: #3f51b5;
+        margin: 0 2px;
+        position: relative;
+        transition: height 0.3s ease, background-color 0.3s ease;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        min-height: 2px;
+    }
+
+    .bar-value {
+        position: absolute;
+        top: -20px;
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+        color: #333;
+    }
+    
+    .compare-1 {
+        background-color: #f44336; /* Red */
+    }
+    
+    .compare-2 {
+        background-color: #e91e63; /* Pink */
+    }
+    
+    .pivot-element {
+        background-color: #ff9800; /* Orange */
+    }
+    
+    .sorted-element {
+        background-color: #4caf50; /* Green */
+    }
+    
+    .current-subarray {
+        border-bottom: 3px solid #ffeb3b; /* Yellow */
+    }
+    
+    .step-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
+    
+    .step-description {
+        padding: 10px;
+        background-color: #e0e0e0;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    
+    @@media (max-width: 768px) {
+        .sorting-container {
+            flex-direction: column;
+        }
+        
+        .sorting-controls {
+            flex: 0 0 auto;
+            max-height: 300px;
+        }
+    }
+</style>

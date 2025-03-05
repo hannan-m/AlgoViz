@@ -1,0 +1,183 @@
+@page "/"
+
+<PageTitle>Algorithm Visualizer - Home</PageTitle>
+
+<div class="home-container">
+    <div class="jumbotron">
+        <h1>Welcome to Algorithm Visualizer</h1>
+        <p class="lead">
+            Explore and understand algorithms through interactive visualizations.
+        </p>
+    </div>
+
+    <div class="algorithm-categories">
+        <div class="algorithm-card">
+            <a href="/pathfinding">
+                <h2>Pathfinding Algorithms</h2>
+                <div class="card-description">
+                    <p>Visualize how algorithms like A*, Dijkstra, BFS, and DFS find paths in a grid.</p>
+                    <ul>
+                        <li>Understand the differences between informed and uninformed search</li>
+                        <li>See how different heuristics affect A* performance</li>
+                        <li>Create custom grids with walls and weighted paths</li>
+                    </ul>
+                </div>
+            </a>
+        </div>
+
+        <div class="algorithm-card">
+            <a href="/sorting">
+                <h2>Sorting Algorithms</h2>
+                <div class="card-description">
+                    <p>Watch how algorithms like Bubble Sort, Quick Sort, Merge Sort, and Heap Sort rearrange arrays.</p>
+                    <ul>
+                        <li>Compare the performance of different sorting techniques</li>
+                        <li>Understand divide and conquer sorting strategies</li>
+                        <li>See how different initial conditions affect performance</li>
+                    </ul>
+                </div>
+            </a>
+        </div>
+
+        <div class="algorithm-card">
+            <a href="/trees">
+                <h2>Tree Algorithms</h2>
+                <div class="card-description">
+                    <p>Explore operations on binary search trees like insertion, deletion, searching, and traversal.</p>
+                    <ul>
+                        <li>Understand tree-based data structures</li>
+                        <li>See how tree operations maintain binary search tree properties</li>
+                        <li>Visualize different tree traversal methods</li>
+                    </ul>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="features-section">
+        <h2>Features</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <span class="oi oi-eye" aria-hidden="true"></span>
+                <h3>Step-By-Step Visualization</h3>
+                <p>Watch algorithms execute one step at a time with clear explanations</p>
+            </div>
+            <div class="feature">
+                <span class="oi oi-timer" aria-hidden="true"></span>
+                <h3>Performance Metrics</h3>
+                <p>Compare execution time and operation counts between algorithms</p>
+            </div>
+            <div class="feature">
+                <span class="oi oi-pencil" aria-hidden="true"></span>
+                <h3>Interactive Editor</h3>
+                <p>Create custom inputs and modify parameters in real-time</p>
+            </div>
+            <div class="feature">
+                <span class="oi oi-book" aria-hidden="true"></span>
+                <h3>Educational Insights</h3>
+                <p>Learn about algorithm complexity, strategies, and applications</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .home-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .jumbotron {
+        background-color: #f8f9fa;
+        padding: 40px;
+        margin-bottom: 30px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .algorithm-categories {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .algorithm-card {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        overflow: hidden;
+    }
+
+    .algorithm-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+
+    .algorithm-card a {
+        color: inherit;
+        text-decoration: none;
+        display: block;
+        padding: 20px;
+    }
+
+    .algorithm-card h2 {
+        margin-top: 0;
+        color: #3f51b5;
+        font-size: 1.5rem;
+    }
+
+    .card-description {
+        margin-top: 15px;
+    }
+
+    .card-description ul {
+        padding-left: 20px;
+        margin-top: 10px;
+        color: #555;
+    }
+
+    .features-section {
+        margin-top: 40px;
+        text-align: center;
+    }
+
+    .features-section h2 {
+        margin-bottom: 30px;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 30px;
+    }
+
+    .feature {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .feature .oi {
+        font-size: 2rem;
+        color: #3f51b5;
+        margin-bottom: 15px;
+    }
+
+    .feature h3 {
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+    }
+
+    @@media (max-width: 768px) {
+        .algorithm-categories {
+            grid-template-columns: 1fr;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

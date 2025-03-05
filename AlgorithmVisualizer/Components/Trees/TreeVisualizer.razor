@@ -1,0 +1,755 @@
+@namespace AlgorithmVisualizer.Components.Trees
+@using AlgorithmVisualizer.Models.TreeModels
+@using AlgorithmVisualizer.Models
+@using AlgorithmVisualizer.Services.Algorithms.Interfaces
+@using AlgorithmVisualizer.Utilities
+@inject IJSRuntime JSRuntime
+
+<div class="tree-container">
+    <div class="tree-controls">
+        <div class="control-section">
+            <h3>Algorithm</h3>
+            <select @bind="selectedAlgorithm" class="form-control">
+                @foreach (var algorithm in Algorithms)
+                {
+                    <option value="@algorithm.Name">@algorithm.Name</option>
+                }
+            </select>
+        </div>
+        
+        <div class="control-section">
+            <h3>Operations</h3>
+            <div class="operation-selector">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="insertOperation" name="operation" value="@TreeOperationType.Insert" checked="@(selectedOperation == TreeOperationType.Insert)" @onchange="() => selectedOperation = TreeOperationType.Insert">
+                    <label class="form-check-label" for="insertOperation">Insert</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="deleteOperation" name="operation" value="@TreeOperationType.Delete" checked="@(selectedOperation == TreeOperationType.Delete)" @onchange="() => selectedOperation = TreeOperationType.Delete">
+                    <label class="form-check-label" for="deleteOperation">Delete</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="searchOperation" name="operation" value="@TreeOperationType.Search" checked="@(selectedOperation == TreeOperationType.Search)" @onchange="() => selectedOperation = TreeOperationType.Search">
+                    <label class="form-check-label" for="searchOperation">Search</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="traverseOperation" name="operation" value="@TreeOperationType.Traverse" checked="@(selectedOperation == TreeOperationType.Traverse)" @onchange="() => selectedOperation = TreeOperationType.Traverse">
+                    <label class="form-check-label" for="traverseOperation">Traverse</label>
+                </div>
+            </div>
+            
+            @if (selectedOperation != TreeOperationType.Traverse)
+            {
+                <div class="form-group">
+                    <label for="nodeValue">Node Value:</label>
+                    <input type="number" class="form-control" id="nodeValue" @bind="nodeValue" />
+                    @if (nodeValueError)
+                    {
+                        <div class="validation-message">
+                            Please enter a valid node value.
+                        </div>
+                    }
+                </div>
+            }
+            
+            <div class="mt-3">
+                <button @onclick="PerformOperationAsync" class="btn btn-primary" disabled="@isVisualizing">Visualize</button>
+                <button @onclick="StopVisualization" class="btn btn-danger" disabled="@(!isVisualizing)">Stop</button>
+                <button @onclick="ResetTree" class="btn btn-secondary mt-2" disabled="@isVisualizing">Reset Tree</button>
+                <button @onclick="GenerateRandomTree" class="btn btn-info mt-2" disabled="@isVisualizing">Generate Random Tree</button>
+            </div>
+        </div>
+        
+        @if (CurrentAlgorithm != null)
+        {
+            <div class="control-section">
+                <h3>Algorithm Details</h3>
+                <div>
+                    <strong>Description:</strong> @CurrentAlgorithm.Description
+                </div>
+                <div class="mt-2">
+                    <strong>Time Complexity:</strong> @CurrentAlgorithm.TimeComplexity
+                </div>
+                <div class="mt-2">
+                    <strong>Space Complexity:</strong> @CurrentAlgorithm.SpaceComplexity
+                </div>
+            </div>
+        }
+        
+        @if (Statistics != null)
+        {
+            <div class="control-section">
+                <h3>Statistics</h3>
+                <div>
+                    <strong>Execution Time:</strong> @Statistics.ExecutionTimeMs.ToString("F2") ms
+                </div>
+                <div class="mt-2">
+                    <strong>Steps:</strong> @Statistics.StepCount
+                </div>
+                <div class="mt-2">
+                    <strong>Nodes Processed:</strong> @Statistics.ElementsProcessed
+                </div>
+                @if (!string.IsNullOrEmpty(Statistics.AdditionalMetrics))
+                {
+                    <div class="mt-2">
+                        <strong>Additional Info:</strong> @Statistics.AdditionalMetrics
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    
+    <div class="tree-visualization">
+        <div class="tree-display">
+            @if (isVisualizing && AlgorithmSteps == null)
+            {
+                <div class="loading-overlay">
+                    <div class="spinner"></div>
+                    <p>Calculating algorithm steps...</p>
+                </div>
+            }
+            
+            @if (CurrentTreeState?.Root != null)
+            {
+                <svg width="100%" height="100%" viewBox="-10 -2 20 12" preserveAspectRatio="xMidYMid meet">
+                    @* Draw edges first so they appear behind nodes *@
+                    @DrawTreeEdges(CurrentTreeState.Root)
+                    @* Then draw nodes *@
+                    @DrawTreeNodes(CurrentTreeState.Root)
+                </svg>
+            }
+            else
+            {
+                <div class="empty-tree-message">
+                    <p>Tree is empty. Insert nodes to visualize the tree.</p>
+                </div>
+            }
+        </div>
+        
+        @if (CurrentStep != null)
+        {
+            <div class="step-description">
+                <p>Step @(CurrentStep.StepNumber + 1): @CurrentStep.Description</p>
+            </div>
+        }
+        
+        @if (AlgorithmSteps != null && AlgorithmSteps.Any())
+        {
+            <div class="step-controls">
+                <button @onclick="() => GoToStep(0)" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex <= 0)">First</button>
+                <button @onclick="PreviousStep" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex <= 0)">Previous</button>
+                <span>Step @(currentStepIndex + 1) of @AlgorithmSteps.Count</span>
+                <button @onclick="NextStep" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Next</button>
+                <button @onclick="() => GoToStep(AlgorithmSteps.Count - 1)" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Last</button>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="autoPlayTree" @bind="autoPlay">
+                    <label class="form-check-label" for="autoPlayTree">Auto Play</label>
+                </div>
+                <div class="form-group">
+                    <label>Speed: @visualizationSpeed</label>
+                    <input type="range" min="1" max="100" step="1" @bind="visualizationSpeed" class="form-control" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<ITreeAlgorithm> Algorithms { get; set; } = new List<ITreeAlgorithm>();
+    
+    private TreeState TreeState { get; set; } = new TreeState();
+    private TreeState CurrentTreeState => CurrentStep?.State ?? TreeState;
+    
+    private string selectedAlgorithm;
+    private ITreeAlgorithm CurrentAlgorithm => Algorithms?.FirstOrDefault(a => a.Name == selectedAlgorithm);
+    
+    private TreeOperationType selectedOperation = TreeOperationType.Insert;
+    private int nodeValue = 10;
+    private bool nodeValueError = false;
+    
+    private bool isVisualizing = false;
+    private AlgorithmStatistics Statistics { get; set; }
+    
+    private List<AlgorithmStep<TreeState>> AlgorithmSteps { get; set; }
+    private int currentStepIndex = -1;
+    private AlgorithmStep<TreeState> CurrentStep => 
+        currentStepIndex >= 0 && currentStepIndex < AlgorithmSteps?.Count 
+            ? AlgorithmSteps[currentStepIndex] 
+            : null;
+    
+    private bool autoPlay = false;
+    private int visualizationSpeed = 50;
+    private System.Threading.CancellationTokenSource cancellationTokenSource;
+    
+    private ThrottledUpdater throttledUpdater = new ThrottledUpdater(50);
+    
+    protected override void OnInitialized()
+    {
+        // Select first algorithm by default
+        if (Algorithms != null && Algorithms.Any())
+        {
+            selectedAlgorithm = Algorithms.First().Name;
+        }
+        
+        // Initialize with some sample data
+        GenerateRandomTree();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Ensure tree is properly initialized
+            await Task.Delay(100);
+            StateHasChanged();
+        }
+        
+        if (autoPlay && AlgorithmSteps != null && currentStepIndex < AlgorithmSteps.Count - 1)
+        {
+            await Task.Delay(101 - visualizationSpeed);
+            await NextStep();
+            StateHasChanged();
+        }
+    }
+    
+    private void ResetTree()
+    {
+        TreeState = new TreeState();
+        
+        // Reset visualization state
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+        isVisualizing = false;
+        nodeValueError = false;
+        
+        // Cancel any ongoing visualization
+        cancellationTokenSource?.Cancel();
+        
+        // Force UI update
+        StateHasChanged();
+    }
+    
+    private void GenerateRandomTree()
+    {
+        ResetTree();
+        
+        try {
+            // Generate a random tree with values between 1-100
+            var random = new Random();
+            int nodeCount = random.Next(5, 15); // Generate 5-15 nodes
+            
+            // Create a sorted list of unique values
+            var values = new List<int>();
+            for (int i = 0; i < nodeCount; i++)
+            {
+                int val;
+                do
+                {
+                    val = random.Next(1, 100);
+                } while (values.Contains(val));
+                
+                values.Add(val);
+            }
+            
+            // Insert values in a balanced way to create a somewhat balanced tree
+            values.Sort(); // Sort values
+            InsertBalanced(values, 0, values.Count - 1);
+            
+            // Calculate positions for the tree
+            if (TreeState.Root != null)
+            {
+                CalculateNodePositions(TreeState.Root, 0, 0, 5);
+            }
+            
+            // Force UI update
+            StateHasChanged();
+        }
+        catch (Exception ex) {
+            Console.Error.WriteLine($"Error generating random tree: {ex.Message}");
+        }
+    }
+    
+    private void InsertBalanced(List<int> values, int start, int end)
+    {
+        if (start > end)
+            return;
+        
+        // Get the middle element and insert it
+        int mid = (start + end) / 2;
+        InsertNode(values[mid]);
+        
+        // Recursively insert left and right halves
+        InsertBalanced(values, start, mid - 1);
+        InsertBalanced(values, mid + 1, end);
+    }
+    
+    private void InsertNode(int value)
+    {
+        // Simple BST insertion without visualization
+        TreeState.Root = InsertNodeRecursive(TreeState.Root, value);
+    }
+    
+    private TreeNode InsertNodeRecursive(TreeNode root, int value)
+    {
+        // If the tree is empty, create a new node
+        if (root == null)
+        {
+            return new TreeNode { Value = value };
+        }
+        
+        // Otherwise, recur down the tree
+        if (value < root.Value)
+        {
+            root.Left = InsertNodeRecursive(root.Left, value);
+        }
+        else if (value > root.Value)
+        {
+            root.Right = InsertNodeRecursive(root.Right, value);
+        }
+        // Equal values are not allowed in this BST implementation
+        
+        return root;
+    }
+    
+    private async Task PerformOperationAsync()
+    {
+        if (CurrentAlgorithm == null)
+        {
+            return;
+        }
+        
+        // Clear previous error
+        nodeValueError = false;
+        
+        // Validate input for operations that require a value
+        if (selectedOperation != TreeOperationType.Traverse && nodeValue <= 0)
+        {
+            nodeValueError = true;
+            return;
+        }
+        
+        // Reset visualization state
+        AlgorithmSteps = null;
+        currentStepIndex = -1;
+        Statistics = null;
+        
+        // Set visualization state
+        isVisualizing = true;
+        
+        // Create a cancellation token source
+        cancellationTokenSource = new CancellationTokenSource();
+        
+        try
+        {
+            // Track performance
+            using var tracker = new PerformanceTracker();
+            tracker.Start();
+            
+            // Get algorithm steps
+            AlgorithmSteps = (await CurrentAlgorithm.GetStepsAsync(
+                TreeState, 
+                selectedOperation, 
+                selectedOperation != TreeOperationType.Traverse ? nodeValue : (int?)null
+            )).ToList();
+            
+            if (AlgorithmSteps != null && AlgorithmSteps.Any())
+            {
+                // Update all node positions in each step
+                foreach (var step in AlgorithmSteps)
+                {
+                    if (step.State?.Root != null)
+                    {
+                        CalculateNodePositions(step.State.Root, 0, 0, 5);
+                    }
+                }
+                
+                // Get the final tree state
+                TreeState = AlgorithmSteps.Last().State;
+                
+                // Record statistics
+                tracker.RecordStep();
+                foreach (var step in AlgorithmSteps)
+                {
+                    tracker.RecordElementsProcessed();
+                }
+                
+                // Set additional metrics based on operation
+                string metricMessage = selectedOperation switch
+                {
+                    TreeOperationType.Insert => $"Node {nodeValue} inserted",
+                    TreeOperationType.Delete => $"Node {nodeValue} deleted",
+                    TreeOperationType.Search => AlgorithmSteps.Last().Description.Contains("found") 
+                        ? $"Node {nodeValue} found" 
+                        : $"Node {nodeValue} not found",
+                    TreeOperationType.Traverse => "Inorder traversal complete",
+                    _ => ""
+                };
+                
+                tracker.SetAdditionalMetrics(metricMessage);
+                
+                // Start visualization from step 0
+                if (AlgorithmSteps.Any())
+                {
+                    currentStepIndex = 0;
+                }
+            }
+            
+            // Stop performance tracking
+            Statistics = tracker.Stop();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error during visualization: {ex}");
+        }
+        finally
+        {
+            isVisualizing = false;
+            StateHasChanged();
+        }
+    }
+    
+    private void StopVisualization()
+    {
+        // Cancel ongoing visualization
+        cancellationTokenSource?.Cancel();
+        isVisualizing = false;
+        autoPlay = false;
+    }
+    
+    private async Task NextStep()
+    {
+        if (AlgorithmSteps == null || currentStepIndex >= AlgorithmSteps.Count - 1)
+        {
+            return;
+        }
+        
+        currentStepIndex++;
+        
+        await throttledUpdater.ThrottleAsync();
+    }
+    
+    private async Task PreviousStep()
+    {
+        if (AlgorithmSteps == null || currentStepIndex <= 0)
+        {
+            return;
+        }
+        
+        currentStepIndex--;
+        
+        await throttledUpdater.ThrottleAsync();
+    }
+    
+    private async Task GoToStep(int stepIndex)
+    {
+        if (AlgorithmSteps == null || stepIndex < 0 || stepIndex >= AlgorithmSteps.Count)
+        {
+            return;
+        }
+        
+        currentStepIndex = stepIndex;
+        
+        await throttledUpdater.ThrottleAsync();
+    }
+    
+    private RenderFragment DrawTreeNodes(TreeNode node) => builder =>
+    {
+        if (node == null)
+            return;
+        
+        // Find the node in the current state (if we're in a step)
+        TreeNode nodeToRender = node;
+        
+        // Determine node style
+        string nodeClass = "tree-node";
+        if (nodeToRender.IsActive)
+            nodeClass += " active-node";
+        if (nodeToRender.IsHighlighted)
+            nodeClass += " highlighted-node";
+        if (nodeToRender.IsResult)
+            nodeClass += " result-node";
+        
+        // Draw the node
+        builder.OpenElement(0, "g");
+        builder.AddAttribute(1, "class", nodeClass);
+        builder.AddAttribute(2, "transform", $"translate({nodeToRender.X}, {nodeToRender.Y})");
+        
+        // Node circle with increased size
+        builder.OpenElement(3, "circle");
+        builder.AddAttribute(4, "r", "0.7");
+        builder.CloseElement();
+        
+        // Node value text with better styling
+        builder.OpenElement(5, "text");
+        builder.AddAttribute(6, "dy", "0.3");
+        builder.AddAttribute(7, "text-anchor", "middle");
+        builder.AddAttribute(8, "font-size", "0.5");
+        builder.AddAttribute(9, "font-weight", "bold");
+        builder.AddContent(10, nodeToRender.Value.ToString());
+        builder.CloseElement();
+        
+        builder.CloseElement();
+        
+        // Recursively draw children
+        if (node.Left != null)
+            builder.AddContent(11, DrawTreeNodes(node.Left));
+        if (node.Right != null)
+            builder.AddContent(12, DrawTreeNodes(node.Right));
+    };
+    
+    private RenderFragment DrawTreeEdges(TreeNode node) => builder =>
+    {
+        if (node == null)
+            return;
+        
+        // Draw edges to children with better styling
+        if (node.Left != null)
+        {
+            builder.OpenElement(0, "line");
+            builder.AddAttribute(1, "x1", node.X.ToString());
+            builder.AddAttribute(2, "y1", (node.Y + 0.7).ToString()); // Adjust to connect from bottom of node
+            builder.AddAttribute(3, "x2", node.Left.X.ToString());
+            builder.AddAttribute(4, "y2", (node.Left.Y - 0.7).ToString()); // Adjust to connect to top of child
+            builder.AddAttribute(5, "class", "tree-edge");
+            builder.AddAttribute(6, "stroke-width", "0.15");
+            builder.CloseElement();
+            
+            // Recursively draw edges for left child
+            builder.AddContent(7, DrawTreeEdges(node.Left));
+        }
+        
+        if (node.Right != null)
+        {
+            builder.OpenElement(8, "line");
+            builder.AddAttribute(9, "x1", node.X.ToString());
+            builder.AddAttribute(10, "y1", (node.Y + 0.7).ToString());
+            builder.AddAttribute(11, "x2", node.Right.X.ToString());
+            builder.AddAttribute(12, "y2", (node.Right.Y - 0.7).ToString());
+            builder.AddAttribute(13, "class", "tree-edge");
+            builder.AddAttribute(14, "stroke-width", "0.15");
+            builder.CloseElement();
+            
+            // Recursively draw edges for right child
+            builder.AddContent(15, DrawTreeEdges(node.Right));
+        }
+    };
+    
+    /// <summary>
+    /// Calculates the visual positions for tree nodes
+    /// </summary>
+    private void CalculateNodePositions(TreeNode node, double x, double y, double horizontalSpacing)
+    {
+        if (node == null)
+            return;
+        
+        // Set the position of the current node
+        node.X = x;
+        node.Y = y;
+        
+        // Calculate positions for children with increased horizontal spacing
+        double nextY = y + 1.5;  // Increased vertical distance for better visibility
+        double leftX = x - horizontalSpacing;  // Left child x-position
+        double rightX = x + horizontalSpacing;  // Right child x-position
+        
+        // Process left subtree
+        if (node.Left != null) {
+            CalculateNodePositions(node.Left, leftX, nextY, Math.Max(horizontalSpacing / 2, 0.7));
+        }
+        
+        // Process right subtree
+        if (node.Right != null) {
+            CalculateNodePositions(node.Right, rightX, nextY, Math.Max(horizontalSpacing / 2, 0.7));
+        }
+    }
+    
+    /// <summary>
+    /// Finds a node with the specified value in the tree
+    /// </summary>
+    private TreeNode FindNode(TreeNode root, int value)
+    {
+        if (root == null)
+            return null;
+        
+        if (root.Value == value)
+            return root;
+        
+        // Try to find in left subtree
+        TreeNode leftResult = FindNode(root.Left, value);
+        if (leftResult != null)
+            return leftResult;
+        
+        // Try to find in right subtree
+        return FindNode(root.Right, value);
+    }
+}
+
+<style>
+    .tree-container {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        height: calc(100vh - 150px);
+        overflow: hidden;
+    }
+    
+    .tree-controls {
+        flex: 0 0 300px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .tree-visualization {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 15px;
+    }
+    
+    .tree-display {
+        flex: 1;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        min-height: 400px;
+    }
+    
+    .empty-tree-message {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+        color: #666;
+        font-size: 1.2rem;
+        text-align: center;
+    }
+    
+    .tree-node circle {
+        fill: #3f51b5;
+        stroke: #002984;
+        stroke-width: 0.1;
+        filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
+        transition: fill 0.3s ease, r 0.3s ease;
+    }
+    
+    .tree-node text {
+        fill: white;
+        font-weight: bold;
+        user-select: none;
+    }
+    
+    .active-node circle {
+        fill: #f44336;
+        stroke: #ba000d;
+        r: 0.9; /* Slightly larger when active */
+        animation: pulse 0.6s infinite alternate;
+    }
+    
+    .highlighted-node circle {
+        fill: #ff9800;
+        stroke: #c66900;
+    }
+    
+    .result-node circle {
+        fill: #4caf50;
+        stroke: #087f23;
+    }
+    
+    .tree-edge {
+        stroke: #555;
+        stroke-width: 0.15;
+        stroke-linecap: round;
+        filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.2));
+    }
+    
+    .step-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        background-color: #f5f5f5;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+    
+    .step-description {
+        padding: 10px;
+        background-color: #e0e0e0;
+        border-radius: 8px;
+        margin-top: 10px;
+        border-left: 4px solid #3f51b5;
+    }
+    
+    .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+    }
+    
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3f51b5;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+    }
+    
+    .validation-message {
+        color: #f44336;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @@keyframes pulse {
+        from {
+            r: 0.7;
+            opacity: 1;
+        }
+        to {
+            r: 0.9;
+            opacity: 0.8;
+        }
+    }
+    
+    @@media (max-width: 768px) {
+        .tree-container {
+            flex-direction: column;
+        }
+        
+        .tree-controls {
+            flex: 0 0 auto;
+            max-height: 300px;
+        }
+    }
+</style>

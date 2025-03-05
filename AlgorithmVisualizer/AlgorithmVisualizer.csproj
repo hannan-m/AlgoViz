@@ -11,18 +11,4 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="9.0.0" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Components\Grid\" />
-    <Folder Include="Components\Sorting\" />
-    <Folder Include="Components\Trees\" />
-    <Folder Include="Models\GridModels\" />
-    <Folder Include="Models\SortingModels\" />
-    <Folder Include="Models\TreeModels\" />
-    <Folder Include="Services\Algorithms\Interfaces\" />
-    <Folder Include="Services\Algorithms\PathFinding\" />
-    <Folder Include="Services\Algorithms\Sorting\" />
-    <Folder Include="Services\Algorithms\Trees\" />
-    <Folder Include="Utilities\" />
-  </ItemGroup>
-
 </Project>
