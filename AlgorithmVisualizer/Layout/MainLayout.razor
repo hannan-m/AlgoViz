@@ -1,17 +1,52 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<div class="app-container">
+    <aside class="sidebar-container">
         <NavMenu />
-    </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4">
-            <h1>Algorithm Visualizer</h1>
-        </div>
+    <div class="main-content">
+        <header class="app-header">
+            <div class="d-flex align-items-center">
+                <button class="menu-toggle d-md-none" @onclick="ToggleSidebar">
+                    <span class="oi oi-menu"></span>
+                </button>
+                <h1 class="app-title">Algorithm Visualizer</h1>
+            </div>
+            <div class="header-actions">
+                <a href="https://github.com/hannan-m/algoviz" target="_blank" class="btn-icon">
+                    <span class="oi oi-code"></span>
+                </a>
+                <button class="btn-icon toggle-theme" @onclick="ToggleTheme">
+                    <span class="oi oi-moon"></span>
+                </button>
+            </div>
+        </header>
 
-        <article class="content px-4">
+        <main class="content-wrapper">
             @Body
-        </article>
-    </main>
+        </main>
+
+        <footer class="app-footer">
+            <div class="container-fluid">
+                <span>© 2023 Algorithm Visualizer | Made with <span class="text-danger">❤</span> for algorithms</span>
+            </div>
+        </footer>
+    </div>
 </div>
+
+@code {
+    private bool sidebarOpen = true;
+    private string currentTheme = "light";
+
+    private void ToggleSidebar()
+    {
+        sidebarOpen = !sidebarOpen;
+    }
+
+    private void ToggleTheme()
+    {
+        currentTheme = currentTheme == "light" ? "dark" : "light";
+        // In a real implementation, you would apply the theme change
+    }
+}

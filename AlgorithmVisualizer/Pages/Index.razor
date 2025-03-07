@@ -3,181 +3,140 @@
 <PageTitle>Algorithm Visualizer - Home</PageTitle>
 
 <div class="home-container">
-    <div class="jumbotron">
-        <h1>Welcome to Algorithm Visualizer</h1>
-        <p class="lead">
-            Explore and understand algorithms through interactive visualizations.
-        </p>
-    </div>
-
-    <div class="algorithm-categories">
-        <div class="algorithm-card">
-            <a href="/pathfinding">
-                <h2>Pathfinding Algorithms</h2>
-                <div class="card-description">
-                    <p>Visualize how algorithms like A*, Dijkstra, BFS, and DFS find paths in a grid.</p>
-                    <ul>
-                        <li>Understand the differences between informed and uninformed search</li>
-                        <li>See how different heuristics affect A* performance</li>
-                        <li>Create custom grids with walls and weighted paths</li>
-                    </ul>
-                </div>
-            </a>
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Visualize Algorithms <span class="text-primary">Interactively</span></h1>
+            <p class="hero-subtitle">
+                Explore and understand complex algorithms through engaging visual representations.
+                Learn how they work, step by step, in an intuitive environment.
+            </p>
+            <div class="hero-buttons">
+                <a href="/pathfinding" class="btn btn-primary btn-lg">Start Exploring</a>
+                <a href="https://github.com/hannan-m/AlgoViz" target="_blank" class="btn btn-outline-secondary btn-lg">View Source</a>
+            </div>
         </div>
-
-        <div class="algorithm-card">
-            <a href="/sorting">
-                <h2>Sorting Algorithms</h2>
-                <div class="card-description">
-                    <p>Watch how algorithms like Bubble Sort, Quick Sort, Merge Sort, and Heap Sort rearrange arrays.</p>
-                    <ul>
-                        <li>Compare the performance of different sorting techniques</li>
-                        <li>Understand divide and conquer sorting strategies</li>
-                        <li>See how different initial conditions affect performance</li>
-                    </ul>
-                </div>
-            </a>
+        <div class="hero-image">
+            <div class="algorithm-animation">
+                <!-- Abstract algorithm visualization animation -->
+                <div class="node n1"></div>
+                <div class="node n2"></div>
+                <div class="node n3"></div>
+                <div class="node n4"></div>
+                <div class="node n5"></div>
+                <div class="edge e1"></div>
+                <div class="edge e2"></div>
+                <div class="edge e3"></div>
+                <div class="edge e4"></div>
+            </div>
         </div>
+    </section>
 
-        <div class="algorithm-card">
-            <a href="/trees">
-                <h2>Tree Algorithms</h2>
-                <div class="card-description">
-                    <p>Explore operations on binary search trees like insertion, deletion, searching, and traversal.</p>
-                    <ul>
+    <section class="algorithm-categories">
+        <h2 class="section-title">Explore Algorithms</h2>
+        <p class="section-subtitle">Choose a category to start visualizing algorithms</p>
+
+        <div class="category-cards">
+            <div class="category-card">
+                <a href="/pathfinding" class="category-link">
+                    <div class="category-icon">
+                        <span class="oi oi-map"></span>
+                    </div>
+                    <h3 class="category-title">Pathfinding Algorithms</h3>
+                    <p class="category-description">
+                        Visualize how algorithms like A*, Dijkstra, BFS, and DFS find paths in a grid.
+                    </p>
+                    <ul class="category-features">
+                        <li>Compare informed vs uninformed search strategies</li>
+                        <li>Understand heuristic functions in A*</li>
+                        <li>Create custom maps with obstacles and weights</li>
+                    </ul>
+                    <div class="category-cta">
+                        <span>Explore Now</span>
+                        <span class="oi oi-arrow-right"></span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="category-card">
+                <a href="/sorting" class="category-link">
+                    <div class="category-icon">
+                        <span class="oi oi-sort-ascending"></span>
+                    </div>
+                    <h3 class="category-title">Sorting Algorithms</h3>
+                    <p class="category-description">
+                        Watch how algorithms like Quick Sort, Merge Sort, and Heap Sort rearrange arrays.
+                    </p>
+                    <ul class="category-features">
+                        <li>Compare time and space complexity</li>
+                        <li>Understand divide and conquer approaches</li>
+                        <li>See how initial conditions affect performance</li>
+                    </ul>
+                    <div class="category-cta">
+                        <span>Explore Now</span>
+                        <span class="oi oi-arrow-right"></span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="category-card">
+                <a href="/trees" class="category-link">
+                    <div class="category-icon">
+                        <span class="oi oi-graph"></span>
+                    </div>
+                    <h3 class="category-title">Tree Algorithms</h3>
+                    <p class="category-description">
+                        Explore operations on binary search trees like insertion, deletion, and traversal.
+                    </p>
+                    <ul class="category-features">
                         <li>Understand tree-based data structures</li>
-                        <li>See how tree operations maintain binary search tree properties</li>
-                        <li>Visualize different tree traversal methods</li>
+                        <li>Learn different traversal techniques</li>
+                        <li>Visualize tree balancing operations</li>
                     </ul>
-                </div>
-            </a>
+                    <div class="category-cta">
+                        <span>Explore Now</span>
+                        <span class="oi oi-arrow-right"></span>
+                    </div>
+                </a>
+            </div>
         </div>
-    </div>
+    </section>
 
-    <div class="features-section">
-        <h2>Features</h2>
+    <section class="features-section">
+        <h2 class="section-title">Key Features</h2>
+        <p class="section-subtitle">What makes this algorithm visualizer special</p>
+
         <div class="features-grid">
-            <div class="feature">
-                <span class="oi oi-eye" aria-hidden="true"></span>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-eye"></span>
+                </div>
                 <h3>Step-By-Step Visualization</h3>
-                <p>Watch algorithms execute one step at a time with clear explanations</p>
+                <p>Watch algorithms execute one step at a time with clear explanations of what's happening.</p>
             </div>
-            <div class="feature">
-                <span class="oi oi-timer" aria-hidden="true"></span>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-timer"></span>
+                </div>
                 <h3>Performance Metrics</h3>
-                <p>Compare execution time and operation counts between algorithms</p>
+                <p>Compare execution time and operation counts to understand algorithm efficiency.</p>
             </div>
-            <div class="feature">
-                <span class="oi oi-pencil" aria-hidden="true"></span>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-pencil"></span>
+                </div>
                 <h3>Interactive Editor</h3>
-                <p>Create custom inputs and modify parameters in real-time</p>
+                <p>Create custom inputs and modify parameters in real-time to see how algorithms respond.</p>
             </div>
-            <div class="feature">
-                <span class="oi oi-book" aria-hidden="true"></span>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-book"></span>
+                </div>
                 <h3>Educational Insights</h3>
-                <p>Learn about algorithm complexity, strategies, and applications</p>
+                <p>Learn about algorithm complexity, strategies, and real-world applications.</p>
             </div>
         </div>
-    </div>
+    </section>
 </div>
-
-<style>
-    .home-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-    }
-
-    .jumbotron {
-        background-color: #f8f9fa;
-        padding: 40px;
-        margin-bottom: 30px;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .algorithm-categories {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 30px;
-        margin-bottom: 40px;
-    }
-
-    .algorithm-card {
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: transform 0.3s, box-shadow 0.3s;
-        overflow: hidden;
-    }
-
-    .algorithm-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-    }
-
-    .algorithm-card a {
-        color: inherit;
-        text-decoration: none;
-        display: block;
-        padding: 20px;
-    }
-
-    .algorithm-card h2 {
-        margin-top: 0;
-        color: #3f51b5;
-        font-size: 1.5rem;
-    }
-
-    .card-description {
-        margin-top: 15px;
-    }
-
-    .card-description ul {
-        padding-left: 20px;
-        margin-top: 10px;
-        color: #555;
-    }
-
-    .features-section {
-        margin-top: 40px;
-        text-align: center;
-    }
-
-    .features-section h2 {
-        margin-bottom: 30px;
-    }
-
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 30px;
-    }
-
-    .feature {
-        padding: 20px;
-        background-color: #f8f9fa;
-        border-radius: 8px;
-    }
-
-    .feature .oi {
-        font-size: 2rem;
-        color: #3f51b5;
-        margin-bottom: 15px;
-    }
-
-    .feature h3 {
-        margin-bottom: 10px;
-        font-size: 1.2rem;
-    }
-
-    @@media (max-width: 768px) {
-        .algorithm-categories {
-            grid-template-columns: 1fr;
-        }
-
-        .features-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>

@@ -1,41 +1,68 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">AlgorithmVisualizer</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
+﻿<div class="nav-container">
+    <div class="nav-header">
+        <a href="/" class="nav-brand">
+            <span class="brand-icon">AV</span>
+            <span class="brand-text">Algorithm Visualizer</span>
+        </a>
+        <button class="nav-toggler" @onclick="ToggleNavMenu">
+            <span class="oi oi-x"></span>
         </button>
     </div>
-</div>
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
+    <div class="nav-profile">
+        <div class="avatar">
+            <span class="oi oi-person"></span>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="pathfinding">
-                <span class="oi oi-map" aria-hidden="true"></span> Pathfinding
-            </NavLink>
+        <div class="profile-info">
+            <span class="profile-name">Learning Mode</span>
+            <span class="profile-role">Interactive Explorer</span>
         </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="sorting">
-                <span class="oi oi-sort-ascending" aria-hidden="true"></span> Sorting
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="trees">
-                <span class="oi oi-graph" aria-hidden="true"></span> Trees
-            </NavLink>
-        </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <nav class="nav-menu @NavMenuCssClass">
+        <NavLink class="nav-item" href="" Match="NavLinkMatch.All">
+            <span class="nav-icon oi oi-home"></span>
+            <span class="nav-text">Home</span>
+        </NavLink>
+        
+        <div class="nav-category">Algorithms</div>
+        
+        <NavLink class="nav-item" href="pathfinding">
+            <span class="nav-icon oi oi-map"></span>
+            <span class="nav-text">Pathfinding</span>
+        </NavLink>
+        
+        <NavLink class="nav-item" href="sorting">
+            <span class="nav-icon oi oi-sort-ascending"></span>
+            <span class="nav-text">Sorting</span>
+        </NavLink>
+        
+        <NavLink class="nav-item" href="trees">
+            <span class="nav-icon oi oi-graph"></span>
+            <span class="nav-text">Trees</span>
+        </NavLink>
+
+        <div class="nav-divider"></div>
+        
+        <div class="nav-category">Resources</div>
+        
+        <a href="https://github.com/hannan-m/AlgoViz" target="_blank" class="nav-item">
+            <span class="nav-icon oi oi-code"></span>
+            <span class="nav-text">GitHub Repository</span>
+        </a>
     </nav>
+
+    <div class="nav-footer">
+        <div class="version">v1.0.0</div>
+    </div>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapsed" : null;
 
     private void ToggleNavMenu()
     {
