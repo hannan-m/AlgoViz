@@ -8,8 +8,8 @@
 <div class="grid-container">
     <div class="grid-controls">
         <div class="control-section">
-            <h3>Algorithm</h3>
-            <select @bind="selectedAlgorithm" class="form-control">
+            <h3><span class="oi oi-cog me-2"></span>Algorithm</h3>
+            <select @bind="selectedAlgorithm" class="form-select mb-3">
                 @foreach (var algorithm in Algorithms)
                 {
                     <option value="@algorithm.Name">@algorithm.Name</option>
@@ -18,76 +18,98 @@
         </div>
 
         <div class="control-section">
-            <h3>Grid Size</h3>
-            <div class="form-group">
-                <label>Rows: @Rows</label>
-                <input type="range" min="5" max="50" step="1" @bind="Rows" class="form-control"/>
+            <h3><span class="oi oi-grid-three-up me-2"></span>Grid Size</h3>
+            <div class="form-group mb-3">
+                <label class="d-block mb-2">Rows: <span class="badge bg-primary">@Rows</span></label>
+                <input type="range" min="5" max="50" step="1" @bind="Rows" class="form-range"/>
             </div>
-            <div class="form-group">
-                <label>Columns: @Columns</label>
-                <input type="range" min="5" max="50" step="1" @bind="Columns" class="form-control"/>
+            <div class="form-group mb-3">
+                <label class="d-block mb-2">Columns: <span class="badge bg-primary">@Columns</span></label>
+                <input type="range" min="5" max="50" step="1" @bind="Columns" class="form-range"/>
             </div>
-            <button @onclick="ResetGrid" class="btn btn-secondary">Reset Grid</button>
+            <button @onclick="ResetGrid" class="btn btn-outline-secondary w-100 mb-3">
+                <span class="oi oi-reload me-2"></span>Reset Grid
+            </button>
         </div>
 
         <div class="control-section">
-            <h3>Cell Type</h3>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" id="selectStart" name="cellType"
-                       value="@CellSelectionType.Start" checked="@(selectionType == CellSelectionType.Start)"
-                       @onchange="() => selectionType = CellSelectionType.Start">
-                <label class="form-check-label" for="selectStart">Start</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" id="selectEnd" name="cellType"
-                       value="@CellSelectionType.End" checked="@(selectionType == CellSelectionType.End)"
-                       @onchange="() => selectionType = CellSelectionType.End">
-                <label class="form-check-label" for="selectEnd">End</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" id="selectWall" name="cellType"
-                       value="@CellSelectionType.Wall" checked="@(selectionType == CellSelectionType.Wall)"
-                       @onchange="() => selectionType = CellSelectionType.Wall">
-                <label class="form-check-label" for="selectWall">Wall</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" id="selectWeight" name="cellType"
-                       value="@CellSelectionType.Weight" checked="@(selectionType == CellSelectionType.Weight)"
-                       @onchange="() => selectionType = CellSelectionType.Weight">
-                <label class="form-check-label" for="selectWeight">Weight</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" id="selectErase" name="cellType"
-                       value="@CellSelectionType.Erase" checked="@(selectionType == CellSelectionType.Erase)"
-                       @onchange="() => selectionType = CellSelectionType.Erase">
-                <label class="form-check-label" for="selectErase">Erase</label>
+            <h3><span class="oi oi-pencil me-2"></span>Cell Type</h3>
+            <div class="cell-type-options mb-3">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" id="selectStart" name="cellType"
+                           value="@CellSelectionType.Start" checked="@(selectionType == CellSelectionType.Start)"
+                           @onchange="() => selectionType = CellSelectionType.Start">
+                    <label class="form-check-label" for="selectStart">
+                        <span class="type-indicator start-indicator"></span> Start
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" id="selectEnd" name="cellType"
+                           value="@CellSelectionType.End" checked="@(selectionType == CellSelectionType.End)"
+                           @onchange="() => selectionType = CellSelectionType.End">
+                    <label class="form-check-label" for="selectEnd">
+                        <span class="type-indicator end-indicator"></span> End
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" id="selectWall" name="cellType"
+                           value="@CellSelectionType.Wall" checked="@(selectionType == CellSelectionType.Wall)"
+                           @onchange="() => selectionType = CellSelectionType.Wall">
+                    <label class="form-check-label" for="selectWall">
+                        <span class="type-indicator wall-indicator"></span> Wall
+                    </label>
+                </div>
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" id="selectWeight" name="cellType"
+                           value="@CellSelectionType.Weight" checked="@(selectionType == CellSelectionType.Weight)"
+                           @onchange="() => selectionType = CellSelectionType.Weight">
+                    <label class="form-check-label" for="selectWeight">
+                        <span class="type-indicator weight-indicator"></span> Weight
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" id="selectErase" name="cellType"
+                           value="@CellSelectionType.Erase" checked="@(selectionType == CellSelectionType.Erase)"
+                           @onchange="() => selectionType = CellSelectionType.Erase">
+                    <label class="form-check-label" for="selectErase">
+                        <span class="oi oi-delete me-1"></span> Erase
+                    </label>
+                </div>
             </div>
         </div>
 
         <div class="control-section">
-            <h3>Actions</h3>
-            <button @onclick="VisualizeAsync" class="btn btn-primary" disabled="@(isVisualizing || !HasStartAndEnd)">
-                Visualize
-            </button>
-            <button @onclick="StopVisualization" class="btn btn-danger" disabled="@(!isVisualizing)">Stop</button>
-            <button @onclick="ClearVisualization" class="btn btn-secondary" disabled="@(isVisualizing)">Clear
-                Visualization
-            </button>
-            <button @onclick="GenerateMaze" class="btn btn-info" disabled="@(isVisualizing)">Generate Maze</button>
+            <h3><span class="oi oi-play-circle me-2"></span>Actions</h3>
+            <div class="d-grid gap-2 mb-3">
+                <button @onclick="VisualizeAsync" class="btn btn-primary" disabled="@(isVisualizing || !HasStartAndEnd)">
+                    <span class="oi oi-media-play me-2"></span>Visualize
+                </button>
+                <button @onclick="StopVisualization" class="btn btn-danger" disabled="@(!isVisualizing)">
+                    <span class="oi oi-media-stop me-2"></span>Stop
+                </button>
+                <button @onclick="ClearVisualization" class="btn btn-secondary" disabled="@(isVisualizing)">
+                    <span class="oi oi-brush me-2"></span>Clear Visualization
+                </button>
+                <button @onclick="GenerateMaze" class="btn btn-info" disabled="@(isVisualizing)">
+                    <span class="oi oi-random me-2"></span>Generate Maze
+                </button>
+            </div>
         </div>
 
         @if (CurrentAlgorithm != null)
         {
             <div class="control-section">
-                <h3>Algorithm Details</h3>
-                <div>
-                    <strong>Description:</strong> @CurrentAlgorithm.Description
-                </div>
-                <div>
-                    <strong>Time Complexity:</strong> @CurrentAlgorithm.TimeComplexity
-                </div>
-                <div>
-                    <strong>Space Complexity:</strong> @CurrentAlgorithm.SpaceComplexity
+                <h3><span class="oi oi-info me-2"></span>Algorithm Details</h3>
+                <div class="algorithm-info-card">
+                    <div class="mb-2">
+                        <strong>Description:</strong> @CurrentAlgorithm.Description
+                    </div>
+                    <div class="mb-2">
+                        <strong>Time Complexity:</strong> @CurrentAlgorithm.TimeComplexity
+                    </div>
+                    <div>
+                        <strong>Space Complexity:</strong> @CurrentAlgorithm.SpaceComplexity
+                    </div>
                 </div>
             </div>
         }
@@ -95,22 +117,24 @@
         @if (Statistics != null)
         {
             <div class="control-section">
-                <h3>Statistics</h3>
-                <div>
-                    <strong>Execution Time:</strong> @Statistics.ExecutionTimeMs.ToString("F2") ms
-                </div>
-                <div>
-                    <strong>Steps:</strong> @Statistics.StepCount
-                </div>
-                <div>
-                    <strong>Cells Visited:</strong> @Statistics.ElementsProcessed
-                </div>
-                @if (!string.IsNullOrEmpty(Statistics.AdditionalMetrics))
-                {
-                    <div>
-                        <strong>Additional Info:</strong> @Statistics.AdditionalMetrics
+                <h3><span class="oi oi-graph me-2"></span>Statistics</h3>
+                <div class="stats-card">
+                    <div class="mb-2">
+                        <strong>Execution Time:</strong> @Statistics.ExecutionTimeMs.ToString("F2") ms
                     </div>
-                }
+                    <div class="mb-2">
+                        <strong>Steps:</strong> @Statistics.StepCount
+                    </div>
+                    <div class="mb-2">
+                        <strong>Cells Visited:</strong> @Statistics.ElementsProcessed
+                    </div>
+                    @if (!string.IsNullOrEmpty(Statistics.AdditionalMetrics))
+                    {
+                        <div>
+                            <strong>Additional Info:</strong> @Statistics.AdditionalMetrics
+                        </div>
+                    }
+                </div>
             </div>
         }
     </div>
@@ -145,6 +169,7 @@
         @if (CurrentStep != null)
         {
             <div class="step-description">
+                <span class="oi oi-info me-2"></span>
                 <p>Step @(CurrentStep.StepNumber + 1): @CurrentStep.Description</p>
             </div>
         }
@@ -152,26 +177,31 @@
         @if (AlgorithmSteps != null && AlgorithmSteps.Any())
         {
             <div class="step-controls">
-                <button @onclick="() => GoToStep(0)" class="btn btn-sm btn-secondary"
-                        disabled="@(currentStepIndex <= 0)">First
+                <button @onclick="() => GoToStep(0)" class="btn btn-outline-primary" disabled="@(currentStepIndex <= 0)">
+                    <span class="oi oi-media-skip-backward me-1"></span> First
                 </button>
-                <button @onclick="PreviousStep" class="btn btn-sm btn-secondary" disabled="@(currentStepIndex <= 0)">
-                    Previous
+                <button @onclick="PreviousStep" class="btn btn-outline-primary" disabled="@(currentStepIndex <= 0)">
+                    <span class="oi oi-media-step-backward me-1"></span> Previous
                 </button>
-                <span>Step @(currentStepIndex + 1) of @AlgorithmSteps.Count</span>
-                <button @onclick="NextStep" class="btn btn-sm btn-secondary"
-                        disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Next
+                <span class="step-counter">Step @(currentStepIndex + 1) of @AlgorithmSteps.Count</span>
+                <button @onclick="NextStep" class="btn btn-outline-primary" disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">
+                    <span class="oi oi-media-step-forward me-1"></span> Next
                 </button>
-                <button @onclick="() => GoToStep(AlgorithmSteps.Count - 1)" class="btn btn-sm btn-secondary"
-                        disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">Last
+                <button @onclick="() => GoToStep(AlgorithmSteps.Count - 1)" class="btn btn-outline-primary" disabled="@(currentStepIndex >= AlgorithmSteps.Count - 1)">
+                    <span class="oi oi-media-skip-forward me-1"></span> Last
                 </button>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="autoPlay" @bind="autoPlay">
-                    <label class="form-check-label" for="autoPlay">Auto Play</label>
+
+                <div class="auto-play-control ms-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoPlay" @bind="autoPlay">
+                        <label class="form-check-label" for="autoPlay">Auto Play</label>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Speed: @visualizationSpeed</label>
-                    <input type="range" min="1" max="100" step="1" @bind="visualizationSpeed" class="form-control"/>
+
+                <div class="speed-control ms-auto">
+                    <label class="form-label mb-0 me-2">Speed: @visualizationSpeed</label>
+                    <input type="range" min="1" max="100" step="1" @bind="visualizationSpeed" class="form-range"
+                           style="width: 120px;"/>
                 </div>
             </div>
         }
@@ -721,16 +751,21 @@
         display: flex;
         flex-direction: row;
         gap: 20px;
-        height: calc(100vh - 150px);
+        height: calc(100vh - 180px);
+        animation: fadeIn 0.5s ease;
         overflow: hidden;
     }
 
     .grid-controls {
         flex: 0 0 300px;
         overflow-y: auto;
-        padding: 15px;
-        background-color: #f5f5f5;
-        border-radius: 5px;
+        padding: 1.5rem;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
     }
 
     .grid-visualization {
@@ -738,10 +773,23 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        padding: 1.5rem;
     }
 
     .control-section {
-        margin-bottom: 20px;
+        margin-bottom: 1.5rem;
+    }
+
+    .control-section h3 {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #212121;
+        display: flex;
+        align-items: center;
     }
 
     .grid {
@@ -769,7 +817,41 @@
         cursor: pointer;
     }
 
-    /* Update other grid cell styles for better visuals */
+    .cell-type-options {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #3f51b5;
+    }
+
+    .type-indicator {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        margin-right: 5px;
+        vertical-align: middle;
+    }
+
+    .start-indicator {
+        background-color: #4CAF50;
+        box-shadow: 0 0 3px rgba(76, 175, 80, 0.7);
+    }
+
+    .end-indicator {
+        background-color: #F44336;
+        box-shadow: 0 0 3px rgba(244, 67, 54, 0.7);
+    }
+
+    .wall-indicator {
+        background-color: #333;
+    }
+
+    .weight-indicator {
+        background-color: #9E9E9E;
+    }
+
+    /* Cell styles */
     .start-cell {
         background-color: #4CAF50 !important;
         box-shadow: 0 0 5px rgba(76, 175, 80, 0.7);
@@ -805,59 +887,91 @@
     .weight-label {
         font-size: 10px;
         color: white;
+        font-weight: bold;
+    }
+
+    .algorithm-info-card, .stats-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #3f51b5;
     }
 
     .step-controls {
         display: flex;
+        flex-wrap: wrap;
         gap: 10px;
         align-items: center;
-        padding: 10px;
-        background-color: #f5f5f5;
-        border-radius: 5px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .step-counter {
+        font-weight: 500;
+        color: #212121;
+        padding: 0 8px;
     }
 
     .step-description {
-        padding: 10px;
-        background-color: #e0e0e0;
-        border-radius: 5px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
         margin-top: 10px;
+        border-left: 4px solid #3f51b5;
+        display: flex;
+        align-items: flex-start;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
-    @@media (max-width: 768px) {
-        .grid-container {
-            flex-direction: column;
-        }
+    .step-description p {
+        margin: 0;
+    }
 
-        .grid-controls {
-            flex: 0 0 auto;
-            max-height: 300px;
-        }
+    .auto-play-control, .speed-control {
+        display: flex;
+        align-items: center;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     @@keyframes visitedAnimation {
-        0% {
-            transform: scale(0.3);
-            opacity: 0.2;
-        }
-        50% {
-            transform: scale(1.2);
-            opacity: 0.7;
-        }
-        100% {
-            transform: scale(1.0);
-            opacity: 1;
-        }
+        0% { transform: scale(0.3); opacity: 0.2; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(1.0); opacity: 1; }
     }
 
     @@keyframes pathAnimation {
-        0% {
-            transform: scale(0.6);
-        }
-        50% {
-            transform: scale(1.2);
-        }
-        100% {
-            transform: scale(1.0);
-        }
+        0% { transform: scale(0.6); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1.0); }
+    }
+
+    @@media (max-width: 768px) {
+    .grid-container {
+        flex-direction: column;
+    }
+
+    .grid-controls {
+        flex: 0 0 auto;
+        max-height: 300px;
+    }
+
+    .step-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .speed-control {
+        margin-left: 0;
+        margin-top: 10px;
+        width: 100%;
+    }
     }
 </style>
