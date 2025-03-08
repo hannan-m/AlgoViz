@@ -483,61 +483,121 @@
             using var tracker = new PerformanceTracker();
             tracker.Start();
 
-            // Pass traversal type if the operation is Traverse
-            Dictionary<string, object> parameters = new Dictionary<string, object>();
-            if (selectedOperation == TreeOperationType.Traverse)
+            // Handle insert operation in a special way to ensure it works correctly
+            if (selectedOperation == TreeOperationType.Insert)
             {
-                parameters["traversalType"] = selectedTraversalType;
-            }
+                // Directly insert the node into the current tree state
+                var treeStateCopy = DeepCloneTreeState(TreeState);
+                InsertNodeIntoState(treeStateCopy, nodeValue);
 
-            // Get algorithm steps
-            AlgorithmSteps = (await CurrentAlgorithm.GetStepsAsync(
-                TreeState,
-                selectedOperation,
-                selectedOperation != TreeOperationType.Traverse ? nodeValue : (int?)null,
-                parameters
-            )).ToList();
+                // Update the visualization
+                TreeState = treeStateCopy;
+                CalculateNodePositionsImproved(TreeState.Root);
 
-            if (AlgorithmSteps != null && AlgorithmSteps.Any())
-            {
-                // Update all node positions in each step with improved positioning algorithm
-                foreach (var step in AlgorithmSteps)
+                // Create a simple visualization with just two steps
+                var step1 = new AlgorithmStep<TreeState>
                 {
-                    if (step.State?.Root != null)
-                    {
-                        // Use improved positioning algorithm
-                        CalculateNodePositionsImproved(step.State.Root);
-                    }
-                }
-
-                // Get the final tree state
-                TreeState = DeepCloneTreeState(AlgorithmSteps.Last().State);
-
-                // Record statistics
-                tracker.RecordStep();
-                foreach (var step in AlgorithmSteps)
-                {
-                    tracker.RecordElementsProcessed();
-                }
-
-                // Set additional metrics based on operation
-                string metricMessage = selectedOperation switch
-                {
-                    TreeOperationType.Insert => $"Node {nodeValue} inserted",
-                    TreeOperationType.Delete => $"Node {nodeValue} deleted",
-                    TreeOperationType.Search => AlgorithmSteps.Last().Description.Contains("found")
-                        ? $"Node {nodeValue} found"
-                        : $"Node {nodeValue} not found",
-                    TreeOperationType.Traverse => $"{selectedTraversalType} traversal complete",
-                    _ => ""
+                    State = DeepCloneTreeState(TreeState),
+                    Description = $"Inserting node with value {nodeValue} into the tree.",
+                    StepNumber = 0
                 };
 
-                tracker.SetAdditionalMetrics(metricMessage);
-
-                // Start visualization from step 0
-                if (AlgorithmSteps.Any())
+                step1.State.Root.IsHighlighted = false;
+                var newNode = FindNode(step1.State.Root, nodeValue);
+                if (newNode != null)
                 {
-                    currentStepIndex = 0;
+                    newNode.IsActive = true;
+                }
+
+                var step2 = new AlgorithmStep<TreeState>
+                {
+                    State = DeepCloneTreeState(TreeState),
+                    Description = $"Node with value {nodeValue} has been inserted.",
+                    StepNumber = 1
+                };
+
+                step2.State.Root.IsHighlighted = false;
+                newNode = FindNode(step2.State.Root, nodeValue);
+                if (newNode != null)
+                {
+                    newNode.IsHighlighted = true;
+                    newNode.IsResult = true;
+                }
+
+                AlgorithmSteps = new List<AlgorithmStep<TreeState>> { step1, step2 };
+
+                // Set statistics
+                tracker.RecordStep();
+                tracker.RecordElementsProcessed();
+                tracker.SetAdditionalMetrics($"Node {nodeValue} inserted");
+
+                // Start from step 0
+                currentStepIndex = 0;
+            }
+            else
+            {
+                // For other operations, use the algorithm's step generator
+                // Make a deep clone of the initial tree state to preserve it
+                var initialTreeState = DeepCloneTreeState(TreeState);
+
+                // Pass traversal type if the operation is Traverse
+                Dictionary<string, object> parameters = new Dictionary<string, object>();
+                if (selectedOperation == TreeOperationType.Traverse)
+                {
+                    parameters["traversalType"] = selectedTraversalType;
+                }
+
+                // Get algorithm steps
+                AlgorithmSteps = (await CurrentAlgorithm.GetStepsAsync(
+                    initialTreeState,
+                    selectedOperation,
+                    selectedOperation != TreeOperationType.Traverse ? nodeValue : (int?)null,
+                    parameters
+                )).ToList();
+
+                if (AlgorithmSteps != null && AlgorithmSteps.Any())
+                {
+                    // Update all node positions in each step with improved positioning algorithm
+                    foreach (var step in AlgorithmSteps)
+                    {
+                        if (step.State?.Root != null)
+                        {
+                            // Use improved positioning algorithm
+                            CalculateNodePositionsImproved(step.State.Root);
+                        }
+                    }
+
+                    // Get the final tree state
+                    var finalState = AlgorithmSteps.Last().State;
+
+                    // Update our application's tree state with the final state
+                    TreeState = DeepCloneTreeState(finalState);
+
+                    // Record statistics
+                    tracker.RecordStep();
+                    foreach (var step in AlgorithmSteps)
+                    {
+                        tracker.RecordElementsProcessed();
+                    }
+
+                    // Set additional metrics based on operation
+                    string metricMessage = selectedOperation switch
+                    {
+                        TreeOperationType.Delete => $"Node {nodeValue} deleted",
+                        TreeOperationType.Search => AlgorithmSteps.Last().Description.Contains("found")
+                            ? $"Node {nodeValue} found"
+                            : $"Node {nodeValue} not found",
+                        TreeOperationType.Traverse => $"{selectedTraversalType} traversal complete",
+                        _ => ""
+                    };
+
+                    tracker.SetAdditionalMetrics(metricMessage);
+
+                    // Start visualization from step 0
+                    if (AlgorithmSteps.Any())
+                    {
+                        currentStepIndex = 0;
+                    }
                 }
             }
 
@@ -553,6 +613,30 @@
             isVisualizing = false;
             StateHasChanged(); // Make sure UI is updated
         }
+    }
+
+    // Check if a node with the given value exists in the tree
+    private bool NodeExists(TreeNode root, int value)
+    {
+        if (root == null)
+            return false;
+
+        if (root.Value == value)
+            return true;
+
+        return NodeExists(root.Left, value) || NodeExists(root.Right, value);
+    }
+
+    // Insert a new node into a tree state
+    private void InsertNodeIntoState(TreeState state, int value)
+    {
+        if (state.Root == null)
+        {
+            state.Root = new TreeNode { Value = value };
+            return;
+        }
+
+        state.Root = InsertNodeRecursive(state.Root, value);
     }
 
     // Create a deep clone of TreeState to avoid reference issues
