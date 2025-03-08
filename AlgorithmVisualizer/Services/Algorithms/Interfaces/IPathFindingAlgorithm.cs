@@ -77,42 +77,52 @@ public interface ISortingAlgorithm
     Task<IEnumerable<AlgorithmStep<SortingState>>> GetStepsAsync(int[] array);
 }
 
-/// <summary>s
-/// Interface for tree algorithms
+/// <summary>
+/// Interface for tree algorithm implementations
 /// </summary>
 public interface ITreeAlgorithm
 {
     /// <summary>
-    /// The name of the algorithm
+    /// Gets the name of the algorithm
     /// </summary>
     string Name { get; }
 
     /// <summary>
-    /// A description of how the algorithm works
+    /// Gets the description of the algorithm
     /// </summary>
     string Description { get; }
 
     /// <summary>
-    /// The time complexity of the algorithm in Big O notation
+    /// Gets the time complexity of the algorithm
     /// </summary>
     string TimeComplexity { get; }
 
     /// <summary>
-    /// The space complexity of the algorithm in Big O notation
+    /// Gets the space complexity of the algorithm
     /// </summary>
     string SpaceComplexity { get; }
 
     /// <summary>
-    /// Executes the algorithm on the tree
+    /// Executes the specified tree operation
     /// </summary>
-    System.Threading.Tasks.Task<TreeState> ExecuteAsync(TreeState initialState, TreeOperationType operation,
-        int? value = null);
+    /// <param name="initialState">The initial state of the tree</param>
+    /// <param name="operation">The operation to perform</param>
+    /// <param name="value">The value for the operation (if applicable)</param>
+    /// <param name="parameters">Additional parameters for the operation (e.g., traversal type)</param>
+    /// <returns>The resulting tree state after the operation</returns>
+    Task<TreeState> ExecuteAsync(TreeState initialState, TreeOperationType operation, int? value = null,
+        Dictionary<string, object> parameters = null);
 
     /// <summary>
-    /// Executes the algorithm and returns each step for visualization
+    /// Gets detailed steps for tree operation visualization
     /// </summary>
-    System.Threading.Tasks.Task<System.Collections.Generic.IEnumerable<Models.AlgorithmStep<TreeState>>> GetStepsAsync(
-        TreeState initialState, TreeOperationType operation, int? value = null);
+    /// <param name="initialState">The initial state of the tree</param>
+    /// <param name="operation">The operation to perform</param>
+    /// <param name="value">The value for the operation (if applicable)</param>
+    /// <param name="parameters">Additional parameters for the operation (e.g., traversal type)</param>
+    /// <returns>A collection of algorithm steps</returns>
+    Task<IEnumerable<AlgorithmStep<TreeState>>> GetStepsAsync(TreeState initialState, TreeOperationType operation,
+        int? value = null, Dictionary<string, object> parameters = null);
 }
 
 /// <summary>
