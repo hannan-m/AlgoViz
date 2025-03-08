@@ -1,0 +1,24 @@
+@page "/trees"
+@using AlgorithmVisualizer.Services.Algorithms
+@using AlgorithmVisualizer.Services.Algorithms.Interfaces
+@using AlgorithmVisualizer.Components.Trees
+@inject IServiceProvider ServiceProvider
+
+<PageTitle>Algorithm Visualizer - Trees</PageTitle>
+
+<div class="page-header">
+    <h2>Tree Algorithm Visualization</h2>
+    <p class="lead">Explore operations on binary search trees like insertion, deletion, searching, and traversal.</p>
+</div>
+<TreeVisualizer Algorithms="@_treeAlgorithms" />
+
+@code {
+    private List<ITreeAlgorithm> _treeAlgorithms;
+
+    protected override void OnInitialized()
+    {
+        // Get all registered tree algorithms
+        var algorithms = AlgorithmService.GetTreeAlgorithms(ServiceProvider);
+        _treeAlgorithms = algorithms;
+    }
+}

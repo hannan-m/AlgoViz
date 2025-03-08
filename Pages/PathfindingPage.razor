@@ -1,0 +1,24 @@
+@page "/pathfinding"
+@using AlgorithmVisualizer.Services.Algorithms
+@using AlgorithmVisualizer.Services.Algorithms.Interfaces
+@using AlgorithmVisualizer.Components.Grid
+@inject IServiceProvider ServiceProvider
+
+<PageTitle>Algorithm Visualizer - Pathfinding</PageTitle>
+
+<div class="page-header">
+    <h2>Pathfinding Algorithm Visualization</h2>
+    <p class="lead">Visualize how algorithms like A*, Dijkstra, BFS, and DFS find paths in a grid.</p>
+</div>
+
+<GridVisualizer Algorithms="@pathFindingAlgorithms" />
+
+@code {
+    private List<IPathFindingAlgorithm> pathFindingAlgorithms;
+
+    protected override void OnInitialized()
+    {
+        // Get all registered pathfinding algorithms
+        pathFindingAlgorithms = AlgorithmService.GetPathFindingAlgorithms(ServiceProvider);
+    }
+}
