@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     permissions:
       contents: read #This is required for actions/checkout
 
@@ -27,7 +27,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -36,7 +36,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
     environment:
       name: 'Production'
@@ -54,9 +54,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1D497C203AE045BFA4FFAC03C6B851D6 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_76E003EC931146DA9AD3F2C3EB6B32B5 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_AF0E85F761C44BB19E92668300CAF484 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9013BB5E20754A018DB06812E12FB634 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4E847EAF7BC7461BBBA98F4215D9E253 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3DC3BC38649B49C38421683FA1FAF30D }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
