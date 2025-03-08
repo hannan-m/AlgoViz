@@ -1,0 +1,142 @@
+@page "/"
+
+<PageTitle>Algorithm Visualizer - Home</PageTitle>
+
+<div class="home-container">
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Visualize Algorithms <span class="text-primary">Interactively</span></h1>
+            <p class="hero-subtitle">
+                Explore and understand complex algorithms through engaging visual representations.
+                Learn how they work, step by step, in an intuitive environment.
+            </p>
+            <div class="hero-buttons">
+                <a href="/pathfinding" class="btn btn-primary btn-lg">Start Exploring</a>
+                <a href="https://github.com/hannan-m/AlgoViz" target="_blank" class="btn btn-outline-secondary btn-lg">View Source</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="algorithm-animation">
+                <!-- Abstract algorithm visualization animation -->
+                <div class="node n1"></div>
+                <div class="node n2"></div>
+                <div class="node n3"></div>
+                <div class="node n4"></div>
+                <div class="node n5"></div>
+                <div class="edge e1"></div>
+                <div class="edge e2"></div>
+                <div class="edge e3"></div>
+                <div class="edge e4"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="algorithm-categories">
+        <h2 class="section-title">Explore Algorithms</h2>
+        <p class="section-subtitle">Choose a category to start visualizing algorithms</p>
+
+        <div class="category-cards">
+            <div class="category-card">
+                <a href="/pathfinding" class="category-link">
+                    <div class="category-icon">
+                        <span class="oi oi-map"></span>
+                    </div>
+                    <h3 class="category-title">Pathfinding Algorithms</h3>
+                    <p class="category-description">
+                        Visualize how algorithms like A*, Dijkstra, BFS, and DFS find paths in a grid.
+                    </p>
+                    <ul class="category-features">
+                        <li>Compare informed vs uninformed search strategies</li>
+                        <li>Understand heuristic functions in A*</li>
+                        <li>Create custom maps with obstacles and weights</li>
+                    </ul>
+                    <div class="category-cta">
+                        <span>Explore Now</span>
+                        <span class="oi oi-arrow-right"></span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="category-card">
+                <a href="/sorting" class="category-link">
+                    <div class="category-icon">
+                        <span class="oi oi-sort-ascending"></span>
+                    </div>
+                    <h3 class="category-title">Sorting Algorithms</h3>
+                    <p class="category-description">
+                        Watch how algorithms like Quick Sort, Merge Sort, and Heap Sort rearrange arrays.
+                    </p>
+                    <ul class="category-features">
+                        <li>Compare time and space complexity</li>
+                        <li>Understand divide and conquer approaches</li>
+                        <li>See how initial conditions affect performance</li>
+                    </ul>
+                    <div class="category-cta">
+                        <span>Explore Now</span>
+                        <span class="oi oi-arrow-right"></span>
+                    </div>
+                </a>
+            </div>
+
+            <div class="category-card">
+                <a href="/trees" class="category-link">
+                    <div class="category-icon">
+                        <span class="oi oi-graph"></span>
+                    </div>
+                    <h3 class="category-title">Tree Algorithms</h3>
+                    <p class="category-description">
+                        Explore operations on binary search trees like insertion, deletion, and traversal.
+                    </p>
+                    <ul class="category-features">
+                        <li>Understand tree-based data structures</li>
+                        <li>Learn different traversal techniques</li>
+                        <li>Visualize tree balancing operations</li>
+                    </ul>
+                    <div class="category-cta">
+                        <span>Explore Now</span>
+                        <span class="oi oi-arrow-right"></span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <h2 class="section-title">Key Features</h2>
+        <p class="section-subtitle">What makes this algorithm visualizer special</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-eye"></span>
+                </div>
+                <h3>Step-By-Step Visualization</h3>
+                <p>Watch algorithms execute one step at a time with clear explanations of what's happening.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-timer"></span>
+                </div>
+                <h3>Performance Metrics</h3>
+                <p>Compare execution time and operation counts to understand algorithm efficiency.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-pencil"></span>
+                </div>
+                <h3>Interactive Editor</h3>
+                <p>Create custom inputs and modify parameters in real-time to see how algorithms respond.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span class="oi oi-book"></span>
+                </div>
+                <h3>Educational Insights</h3>
+                <p>Learn about algorithm complexity, strategies, and real-world applications.</p>
+            </div>
+        </div>
+    </section>
+</div>
