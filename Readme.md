@@ -5,6 +5,8 @@
 
 > An interactive educational tool for visualizing and understanding algorithms through step-by-step animations
 
+[✨ Live Demo](https://algoviz.azurewebsites.net/)
+
 <p align="center"> <img src="https://github.com/hannan-m/AlgoViz/blob/main/wwwroot/preview-main.png" alt="Algorithm Visualizer Screenshot" width="800"> </p>
 <p align="center"> <img src="https://github.com/hannan-m/AlgoViz/blob/main/wwwroot/preview-pathfinding.png" alt="Algorithm Visualizer Screenshot" width="800"> </p>
 <p align="center"> <img src="https://github.com/hannan-m/AlgoViz/blob/main/wwwroot/preview-tree.png" alt="Algorithm Visualizer Screenshot" width="800"> </p>
